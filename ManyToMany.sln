@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36221.1 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManyToMany", "ManyToMany\ManyToMany.csproj", "{C2A14D00-A172-4021-9D02-432B09FE7688}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManyToMany.Core", "ManyToMany.Core\ManyToMany.Core.csproj", "{7B5B1857-A458-40D1-8D34-E4EE759EE306}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C2A14D00-A172-4021-9D02-432B09FE7688}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2A14D00-A172-4021-9D02-432B09FE7688}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2A14D00-A172-4021-9D02-432B09FE7688}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2A14D00-A172-4021-9D02-432B09FE7688}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B5B1857-A458-40D1-8D34-E4EE759EE306}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B5B1857-A458-40D1-8D34-E4EE759EE306}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B5B1857-A458-40D1-8D34-E4EE759EE306}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B5B1857-A458-40D1-8D34-E4EE759EE306}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {336C7A4F-8E62-4BB4-B639-1AF81BC776F7}
+	EndGlobalSection
+EndGlobal
