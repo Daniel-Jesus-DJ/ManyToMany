@@ -1,8 +1,179 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link href="https://kendo.cdn.telerik.com/themes/12.2.3/default/default-main.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+
+
+    <script src="js/kendo.all.min.js"></script>
+
+
+</head>
+<body>
+    <div id="example">
+        <div class="k-d-flex k-flex-wrap">
+            <div class="k-flex-grow">
+                <h4 class="mb-sm">Available Products</h4>
+                <div id="inStockProductsGrid"></div>
+            </div>
+            <div class="k-flex-grow">
+                <h4 class="mb-sm">Not Available Products</h4>
+                <div id="discontinuedGrid"></div>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function () {
+                var crudServiceBaseUrl = "https://demos.telerik.com/service/v2/core";
+                var inStockData = [],
+                    discontinuedData = [];
+
+                var discontinuedDS = new kendo.data.DataSource({
+                    data: discontinuedData,
+                    schema: {
+                        model: {
+                            id: "ProductID"
+                        }                    },
+                    pageSize: 10
+                });
+
+                var inStockDS = new kendo.data.DataSource({
+                    data: inStockData,
+                    schema: {
+                        model: {
+                            id: "ProductID"
+                        }
+                    },
+                    pageSize: 10,
+                });
+
+
+                $.ajax({
+                    type: "READ",
+                    url: crudServiceBaseUrl + "/Products",
+                    success: function (data) {
+                        data.forEach(function (item) {
+                            item.Discontinued === false ? inStockData.push(item) : discontinuedData.push(item);
+                        });
+
+                        discontinuedDS.data(discontinuedData);
+                        inStockDS.data(inStockData);
+                    }
+                });
+
+                $("#inStockProductsGrid").kendoGrid({
+                    dataSource: inStockDS,
+                    pageable: true,
+                    height: 400,
+                    width: 550,
+                    columns: [
+                        { draggable: true, width: "40px" },
+                        { field: "ProductName", title: "Product Name", width: "200px" },
+                        { field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: "140px" },
+                        {
+                            field: "Discontinued", title: "In Stock",
+                            template: "<span id='badge_#=ProductID#' class='badgeTemplate'></span>",
+                            attributes: { style: "text-align: center;" },
+                            width: "130px"
+                        }],
+                    dataBound: onDataBound,
+                    navigatable: true,
+                    reorderable: {
+                        rows: true
+                    },
+                    rowReorder: onRowRеordered
+                });
+
+                $("#discontinuedGrid").kendoGrid({
+                    dataSource: discontinuedDS,
+                    pageable: true,
+                    height: 400,
+                    width: 550,
+                    columns: [
+                        { draggable: true, width: "40px" },
+                        { field: "ProductName", title: "Product Name", width: "200px" },
+                        { field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: "140px" },
+                        {
+                            field: "Discontinued", title: "In Stock",
+                            template: "<span id='badge_#=ProductID#' class='badgeTemplate'></span>",
+                            attributes: { style: "text-align: center;" },
+                            width: "130px"
+                        }],
+                    dataBound: onDataBound,
+                    navigatable: true,
+                    reorderable: {
+                        rows: true
+                    },
+                    rowReorder: onRowRеordered
+                });
+            });
+
+              const tr = {
+                    ProductID: 999,
+                    ProductName: "Placeholder",
+                    UnitPrice: "Placeholder",
+                    dummy: true,
+            };
+
+            function onDataBound(e) {
+               var grid = this;
+
+                if (grid.dataSource.get(tr.ProductID) && grid.dataSource.view().length > 1) {
+                    grid.dataSource.remove(grid.dataSource.get(tr.ProductID));
+                };
+
+                if (grid.dataSource.view().length === 0) {
+                  grid.dataSource.add(tr);
+                };
+
+                grid.table.find("tr").each(function () {
+                    var dataItem = grid.dataItem(this);
+                    var themeColor = dataItem.Discontinued ? 'error' : 'success';
+                    var text = dataItem.Discontinued ? 'not available' : 'available';
+
+
+                    $(this).find(".badgeTemplate").kendoBadge({
+                        themeColor: themeColor,
+                        text: text,
+                    });
+                });
+            };
+
+            function onRowRеordered(ev) {
+                var grid = ev.sender,
+                    dataSource = grid.dataSource,
+                    externalGrid, externalDataItem;
+
+                if (ev.oldIndex === -1) { // Row dropped from external grid
+                    ev.preventDefault();
+                    externalGrid = ev.row.parents(".k-grid").data("kendoGrid");
+
+                    externalDataItem = externalGrid.dataItem(ev.row);
+
+                    if (!externalDataItem.dummy) {
+                        externalDataItem.Discontinued === true ? externalDataItem.Discontinued = false : externalDataItem.Discontinued = true;
+
+                        externalGrid.dataSource.remove(externalDataItem);
+                        dataSource.insert(ev.newIndex, externalDataItem.toJSON());
+
+                        const dummyRow = dataSource.get(tr.ProductID);
+
+                        if (dummyRow) {
+                            dataSource.remove(dummyRow);
+                        };
+                    };
+                };
+
+                if (externalGrid && externalGrid.dataSource.total() === 0) {
+                  externalGrid.dataSource.add(tr);
+                };
+            };
+        </script>
+    </div>
+
+
+
+</body>
+</html>

@@ -1,4 +1,4 @@
-namespace ManyToMany.Models
+namespace ManyToMany.Core.Models
 {
     public class ErrorViewModel
     {

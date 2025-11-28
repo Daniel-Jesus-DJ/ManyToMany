@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using ManyToMany.Models;
+using ManyToMany.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ManyToMany.Controllers
@@ -14,11 +14,6 @@ namespace ManyToMany.Controllers
         }
 
         public IActionResult Index()
-        {
-            return View();
-        }
-
-        public IActionResult Privacy()
         {
             return View();
         }
