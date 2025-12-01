@@ -57,6 +57,7 @@
                 }
             });
 
+            // create grids
             $("#inStockProductsGrid").kendoGrid({
                 dataSource: inStockDS,
                 pageable: true,
@@ -99,6 +100,82 @@
                 rowReorder: onRowReordered
             });
 
+            // Setup cross-grid drag & drop. Called after grids are created and also from onDataBound so targets/draggables stay in sync.
+            function setupCrossGridDragDrop() {
+                var inGrid = $("#inStockProductsGrid").data("kendoGrid");
+                var discGrid = $("#discontinuedGrid").data("kendoGrid");
+                if (!inGrid || !discGrid) return;
+
+                // Remove any previous draggable/dropTarget instances (defensive)
+                try {
+                    inGrid.table.find("tbody").each(function () {
+                        var existing = $(this).data("kendoDraggableInstance");
+                        if (existing && existing.destroy) existing.destroy();
+                    });
+                    discGrid.table.find("tbody").each(function () {
+                        var existing = $(this).data("kendoDropTargetInstance");
+                        if (existing && existing.destroy) existing.destroy();
+                    });
+                } catch (ignore) {}
+
+                // make rows draggable (group same for both grids)
+                inGrid.table.kendoDraggable({
+                    filter: "tbody > tr",
+                    group: "gridRows",
+                    hint: function (e) {
+                        // clone the row as hint
+                        return e.clone().css({ "background": "#fff", "box-shadow": "0 2px 6px rgba(0,0,0,0.2)" });
+                    }
+                });
+
+                discGrid.table.kendoDraggable({
+                    filter: "tbody > tr",
+                    group: "gridRows",
+                    hint: function (e) {
+                        return e.clone().css({ "background": "#fff", "box-shadow": "0 2px 6px rgba(0,0,0,0.2)" });
+                    }
+                });
+
+                // each grid table accepts drops from the other grid
+                [inGrid, discGrid].forEach(function (targetGrid) {
+                    targetGrid.table.kendoDropTarget({
+                        group: "gridRows",
+                        dragenter: function () {
+                            targetGrid.table.addClass("k-grid-drop-target");
+                        },
+                        dragleave: function () {
+                            targetGrid.table.removeClass("k-grid-drop-target");
+                        },
+                        drop: function (ev) {
+                            targetGrid.table.removeClass("k-grid-drop-target");
+                            // identify dragged row and its source grid
+                            var draggable = ev.draggable;
+                            var draggedRow = draggable.currentTarget || draggable.element;
+                            var sourceGrid = draggedRow.closest(".k-grid").data("kendoGrid");
+                            if (!sourceGrid) return;
+
+                            var sourceItem = sourceGrid.dataItem(draggedRow);
+                            if (!sourceItem || sourceItem.dummy) return; // ignore placeholders
+
+                            // remove from source and add to target at end
+                            // convert to plain object to avoid references to removed DS models
+                            var plain = sourceItem.toJSON ? sourceItem.toJSON() : $.extend({}, sourceItem);
+                            sourceGrid.dataSource.remove(sourceItem);
+                            targetGrid.dataSource.add(plain);
+
+                            // if source became empty, ensure placeholder present
+                            if (sourceGrid.dataSource.view().length === 0) {
+                                sourceGrid.dataSource.add(tr);
+                            }
+
+                            // remove placeholder from target if present
+                            var placeholder = targetGrid.dataSource.get(tr.ProductID);
+                            if (placeholder) targetGrid.dataSource.remove(placeholder);
+                        }
+                    });
+                });
+            }
+
             function onDataBound(e) {
                 var grid = this;
 
@@ -122,6 +199,9 @@
                         text: text
                     });
                 });
+
+                // Re-setup drag/drop targets after rows change
+                setupCrossGridDragDrop();
             }
 
             function onRowReordered(ev) {
@@ -146,6 +226,9 @@
                     externalGrid.dataSource.add(tr);
                 }
             }
+
+            // initial setup once grids are created
+            setupCrossGridDragDrop();
         });
     })();
 </script>
