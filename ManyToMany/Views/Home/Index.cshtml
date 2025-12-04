@@ -1,65 +1,59 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <title></title>
-    <link href="https://kendo.cdn.telerik.com/themes/12.2.3/default/default-main.css" rel="stylesheet" />
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+﻿@{
+    ViewData["Title"] = "Home";
+}
 
-
-
-    <script src="js/kendo.all.min.js"></script>
-
-
-</head>
-<body>
-    <div id="example">
-        <div class="k-d-flex k-flex-wrap">
-            <div class="k-flex-grow">
-                <h4 class="mb-sm">Available Products</h4>
-                <div id="inStockProductsGrid"></div>
-            </div>
-            <div class="k-flex-grow">
-                <h4 class="mb-sm">Not Available Products</h4>
-                <div id="discontinuedGrid"></div>
-            </div>
+<div id="example">
+    <div class="k-d-flex k-flex-wrap">
+        <div class="k-flex-grow">
+            <h4 class="mb-sm">Games</h4>
+            <div id="inStockProductsGrid"></div>
         </div>
+        <div class="k-flex-grow">
+            <h4 class="mb-sm">Players</h4>
+            <div id="discontinuedGrid"></div>
+        </div>
+    </div>
+</div>
 
-        <script>
-            $(document).ready(function () {
+@section Scripts {
+    <script>
+        (function () {
+            if (!window.kendo) {
+                console.error("Kendo is not loaded. Check _Layout.cshtml script order.");
+                return;
+            }
+
+            // Placeholder row must exist before any dataBound can run.
+            var tr = { ProductID: 999, ProductName: "Placeholder", UnitPrice: "Placeholder", dummy: true };
+
+            $(function () {
                 var crudServiceBaseUrl = "https://demos.telerik.com/service/v2/core";
-                var inStockData = [],
-                    discontinuedData = [];
+                var inStockData = [], discontinuedData = [];
 
                 var discontinuedDS = new kendo.data.DataSource({
                     data: discontinuedData,
-                    schema: {
-                        model: {
-                            id: "ProductID"
-                        }                    },
+                    schema: { model: { id: "ProductID" } },
                     pageSize: 10
                 });
 
                 var inStockDS = new kendo.data.DataSource({
                     data: inStockData,
-                    schema: {
-                        model: {
-                            id: "ProductID"
-                        }
-                    },
-                    pageSize: 10,
+                    schema: { model: { id: "ProductID" } },
+                    pageSize: 10
                 });
 
-
                 $.ajax({
-                    type: "READ",
+                    type: "GET",
                     url: crudServiceBaseUrl + "/Products",
                     success: function (data) {
                         data.forEach(function (item) {
                             item.Discontinued === false ? inStockData.push(item) : discontinuedData.push(item);
                         });
-
                         discontinuedDS.data(discontinuedData);
                         inStockDS.data(inStockData);
+                    },
+                    error: function (xhr, status, err) {
+                        console.error("Products request failed:", status, err);
                     }
                 });
 
@@ -67,34 +61,32 @@
                     dataSource: inStockDS,
                     pageable: true,
                     height: 400,
-                    width: 550,
+                    width: 625,
                     columns: [
                         { draggable: true, width: "40px" },
                         { field: "ProductName", title: "Product Name", width: "200px" },
-                        { field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: "140px" },
-                        {
-                            field: "Discontinued", title: "In Stock",
-                            template: "<span id='badge_#=ProductID#' class='badgeTemplate'></span>",
-                            attributes: { style: "text-align: center;" },
-                            width: "130px"
-                        }],
+                        { field: "Genre", title: "Genre", format: "{0:c}", width: "140px" },
+                        { field: "Singleplayer", title: "Singleplayer", format: "{0:c}", width: "140px" },
+                        { field: "Developer", title: "Developer", format: "{0:c}", width: "140px" },
+                        { field: "Publisher", title: "Publisher", format: "{0:c}", width: "140px" },
+                        { field: "launched", title: "Launched", format: "{0:c}", width: "140px" },
+                        { field: "FSKRating", title: "FSK-Rating", format: "{0:c}", width: "140px" }],
+                       
                     dataBound: onDataBound,
                     navigatable: true,
-                    reorderable: {
-                        rows: true
-                    },
-                    rowReorder: onRowRеordered
+                    reorderable: { rows: true },
+                    rowReorder: onRowReordered
                 });
 
                 $("#discontinuedGrid").kendoGrid({
                     dataSource: discontinuedDS,
                     pageable: true,
                     height: 400,
-                    width: 550,
+                    width: 625,
                     columns: [
                         { draggable: true, width: "40px" },
-                        { field: "ProductName", title: "Product Name", width: "200px" },
-                        { field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: "140px" },
+                        { field: "ProductName", title: "Name", width: "200px" },
+                        { field: "Gender", title: "Gender", format: "{0:c}", width: "140px" },
                         {
                             field: "Discontinued", title: "In Stock",
                             template: "<span id='badge_#=ProductID#' class='badgeTemplate'></span>",
@@ -103,77 +95,140 @@
                         }],
                     dataBound: onDataBound,
                     navigatable: true,
-                    reorderable: {
-                        rows: true
-                    },
-                    rowReorder: onRowRеordered
+                    reorderable: { rows: true },
+                    rowReorder: onRowReordered
                 });
-            });
 
-              const tr = {
-                    ProductID: 999,
-                    ProductName: "Placeholder",
-                    UnitPrice: "Placeholder",
-                    dummy: true,
-            };
+                // Setup cross-grid drag & drop. Called after grids are created and also from onDataBound so targets/draggables stay in sync.
+                function setupCrossGridDragDrop() {
+                    var inGrid = $("#inStockProductsGrid").data("kendoGrid");
+                    var discGrid = $("#discontinuedGrid").data("kendoGrid");
+                    if (!inGrid || !discGrid) return;
 
-            function onDataBound(e) {
-               var grid = this;
+                    // Remove any previous draggable/dropTarget instances (defensive)
+                    try {
+                        inGrid.table.find("tbody").each(function () {
+                            var existing = $(this).data("kendoDraggableInstance");
+                            if (existing && existing.destroy) existing.destroy();
+                        });
+                        discGrid.table.find("tbody").each(function () {
+                            var existing = $(this).data("kendoDropTargetInstance");
+                            if (existing && existing.destroy) existing.destroy();
+                        });
+                    } catch (ignore) {}
 
-                if (grid.dataSource.get(tr.ProductID) && grid.dataSource.view().length > 1) {
-                    grid.dataSource.remove(grid.dataSource.get(tr.ProductID));
-                };
-
-                if (grid.dataSource.view().length === 0) {
-                  grid.dataSource.add(tr);
-                };
-
-                grid.table.find("tr").each(function () {
-                    var dataItem = grid.dataItem(this);
-                    var themeColor = dataItem.Discontinued ? 'error' : 'success';
-                    var text = dataItem.Discontinued ? 'not available' : 'available';
-
-
-                    $(this).find(".badgeTemplate").kendoBadge({
-                        themeColor: themeColor,
-                        text: text,
+                    // make rows draggable (group same for both grids)
+                    inGrid.table.kendoDraggable({
+                        filter: "tbody > tr",
+                        group: "gridRows",
+                        hint: function (e) {
+                            // clone the row as hint
+                            return e.clone().css({ "background": "#fff", "box-shadow": "0 2px 6px rgba(0,0,0,0.2)" });
+                        }
                     });
-                });
-            };
 
-            function onRowRеordered(ev) {
-                var grid = ev.sender,
-                    dataSource = grid.dataSource,
-                    externalGrid, externalDataItem;
+                    discGrid.table.kendoDraggable({
+                        filter: "tbody > tr",
+                        group: "gridRows",
+                        hint: function (e) {
+                            return e.clone().css({ "background": "#fff", "box-shadow": "0 2px 6px rgba(0,0,0,0.2)" });
+                        }
+                    });
 
-                if (ev.oldIndex === -1) { // Row dropped from external grid
-                    ev.preventDefault();
-                    externalGrid = ev.row.parents(".k-grid").data("kendoGrid");
+                    // each grid table accepts drops from the other grid
+                    [inGrid, discGrid].forEach(function (targetGrid) {
+                        targetGrid.table.kendoDropTarget({
+                            group: "gridRows",
+                            dragenter: function () {
+                                targetGrid.table.addClass("k-grid-drop-target");
+                            },
+                            dragleave: function () {
+                                targetGrid.table.removeClass("k-grid-drop-target");
+                            },
+                            drop: function (ev) {
+                                targetGrid.table.removeClass("k-grid-drop-target");
+                                // identify dragged row and its source grid
+                                var draggable = ev.draggable;
+                                var draggedRow = draggable.currentTarget || draggable.element;
+                                var sourceGrid = draggedRow.closest(".k-grid").data("kendoGrid");
+                                if (!sourceGrid) return;
 
-                    externalDataItem = externalGrid.dataItem(ev.row);
+                                var sourceItem = sourceGrid.dataItem(draggedRow);
+                                if (!sourceItem || sourceItem.dummy) return; // ignore placeholders
 
-                    if (!externalDataItem.dummy) {
-                        externalDataItem.Discontinued === true ? externalDataItem.Discontinued = false : externalDataItem.Discontinued = true;
+                                // remove from source and add to target at end
+                                // convert to plain object to avoid references to removed DS models
+                                var plain = sourceItem.toJSON ? sourceItem.toJSON() : $.extend({}, sourceItem);
+                                sourceGrid.dataSource.remove(sourceItem);
+                                targetGrid.dataSource.add(plain);
 
-                        externalGrid.dataSource.remove(externalDataItem);
-                        dataSource.insert(ev.newIndex, externalDataItem.toJSON());
+                                // if source became empty, ensure placeholder present
+                                if (sourceGrid.dataSource.view().length === 0) {
+                                    sourceGrid.dataSource.add(tr);
+                                }
 
-                        const dummyRow = dataSource.get(tr.ProductID);
+                                // remove placeholder from target if present
+                                var placeholder = targetGrid.dataSource.get(tr.ProductID);
+                                if (placeholder) targetGrid.dataSource.remove(placeholder);
+                            }
+                        });
+                    });
+                }
 
-                        if (dummyRow) {
-                            dataSource.remove(dummyRow);
-                        };
-                    };
-                };
+                function onDataBound(e) {
+                    var grid = this;
 
-                if (externalGrid && externalGrid.dataSource.total() === 0) {
-                  externalGrid.dataSource.add(tr);
-                };
-            };
-        </script>
-    </div>
+                    // Defensive: ensure dataItem exists (empty rows may not have dataItem)
+                    if (grid.dataSource.get && grid.dataSource.get(tr.ProductID) && grid.dataSource.view().length > 1) {
+                        grid.dataSource.remove(grid.dataSource.get(tr.ProductID));
+                    }
 
+                    if (grid.dataSource.view().length === 0) {
+                        grid.dataSource.add(tr);
+                    }
 
+                    grid.table.find("tr").each(function () {
+                        var dataItem = grid.dataItem(this);
+                        if (!dataItem) return;
+                        var themeColor = dataItem.Discontinued ? 'error' : 'success';
+                        var text = dataItem.Discontinued ? 'not available' : 'available';
 
-</body>
-</html>
+                        $(this).find(".badgeTemplate").kendoBadge({
+                            themeColor: themeColor,
+                            text: text
+                        });
+                    });
+
+                    // Re-setup drag/drop targets after rows change
+                    setupCrossGridDragDrop();
+                }
+
+                function onRowReordered(ev) {
+                    var grid = ev.sender, dataSource = grid.dataSource, externalGrid, externalDataItem;
+
+                    if (ev.oldIndex === -1) { // Row dropped from external grid
+                        ev.preventDefault();
+                        externalGrid = ev.row.parents(".k-grid").data("kendoGrid");
+                        externalDataItem = externalGrid.dataItem(ev.row);
+
+                        if (!externalDataItem.dummy) {
+                            externalDataItem.Discontinued = !externalDataItem.Discontinued;
+                            externalGrid.dataSource.remove(externalDataItem);
+                            dataSource.insert(ev.newIndex, externalDataItem.toJSON());
+
+                            var dummyRow = dataSource.get(tr.ProductID);
+                            if (dummyRow) dataSource.remove(dummyRow);
+                        }
+                    }
+
+                    if (externalGrid && externalGrid.dataSource.total() === 0) {
+                        externalGrid.dataSource.add(tr);
+                    }
+                }
+
+                // initial setup once grids are created
+                setupCrossGridDragDrop();
+            });
+        })();
+    </script>
+}

@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ManyToMany.styles.css" asp-append-version="true" />
+
+    <!-- Kendo styles -->
+    <link rel="stylesheet" href="~/lib/kendo/2021.1.330/kendo.common.min.css" />
+    <link rel="stylesheet" href="~/lib/kendo/2021.1.330/kendo.default-v2.min.css" />
 </head>
 <body>
     <header>
@@ -32,9 +36,20 @@
 
     <footer class="border-top footer text-muted">
     </footer>
+
+    <!-- Scripts: jQuery first, then Kendo, then app scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <!-- Optional: jszip for Kendo export features -->
+    <script src="~/lib/kendo/2021.1.330/jszip.min.js"></script>
+
+    <script src="~/lib/kendo/2021.1.330/kendo.all.min.js"></script>
+    <script src="~/lib/kendo/2021.1.330/cultures/kendo.culture.de-DE.min.js"></script>
+    <script src="~/lib/kendo/2021.1.330/messages/kendo.messages.de-DE.min.js"></script>
+
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
