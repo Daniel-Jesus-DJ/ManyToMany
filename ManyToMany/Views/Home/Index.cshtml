@@ -1,16 +1,17 @@
-﻿@{
+﻿@model IEnumerable<ManyToMany.Core.Models.Game>
+@{
     ViewData["Title"] = "Home";
 }
 
 <div id="example">
     <div class="k-d-flex k-flex-wrap">
         <div class="k-flex-grow">
-            <h4 class="mb-sm">Games</h4>
-            <div id="inStockProductsGrid"></div>
+            <h4 class="mb-sm">🎮 Games</h4>
+            <div id="gamesGrid"></div>
         </div>
         <div class="k-flex-grow">
-            <h4 class="mb-sm">Players</h4>
-            <div id="discontinuedGrid"></div>
+            <h4 class="mb-sm">👤 Players</h4>
+            <div id="personsGrid"></div>
         </div>
     </div>
 </div>
@@ -19,215 +20,154 @@
     <script>
         (function () {
             if (!window.kendo) {
-                console.error("Kendo is not loaded. Check _Layout.cshtml script order.");
+                console.error("Kendo UI is not loaded. Check _Layout.cshtml script order.");
                 return;
             }
 
-            // Placeholder row must exist before any dataBound can run.
-            var tr = { ProductID: 999, ProductName: "Placeholder", UnitPrice: "Placeholder", dummy: true };
-
             $(function () {
-                var crudServiceBaseUrl = "https://demos.telerik.com/service/v2/core";
-                var inStockData = [], discontinuedData = [];
+                // --- 1. КОНФИГУРАЦИЯ ИСТОЧНИКОВ ДАННЫХ (DATASOURCES) ---
 
-                var discontinuedDS = new kendo.data.DataSource({
-                    data: discontinuedData,
-                    schema: { model: { id: "ProductID" } },
-                    pageSize: 10
-                });
+                // Функция для преобразования данных в JSON для отправки на сервер.
+                // Kendo Grid по умолчанию отправляет данные в формате form-urlencoded,
+                // но нам нужен JSON для [FromBody] в контроллере.
+                function parameterMap(options, operation) {
+                    if (operation !== "read" && options.models) {
+                        // Kendo отправляет массив моделей, но наш API принимает одну модель в теле.
+                        // Сериализуем первый элемент массива в JSON-строку.
+                        return JSON.stringify(options.models[0]);
+                    }
+                    return options; // Для READ возвращаем параметры как есть
+                }
 
-                var inStockDS = new kendo.data.DataSource({
-                    data: inStockData,
-                    schema: { model: { id: "ProductID" } },
-                    pageSize: 10
-                });
-
-                $.ajax({
-                    type: "GET",
-                    url: crudServiceBaseUrl + "/Products",
-                    success: function (data) {
-                        data.forEach(function (item) {
-                            item.Discontinued === false ? inStockData.push(item) : discontinuedData.push(item);
-                        });
-                        discontinuedDS.data(discontinuedData);
-                        inStockDS.data(inStockData);
+                // --- КОНФИГУРАЦИЯ GAME DATASOURCE ---
+                var gameDS = new kendo.data.DataSource({
+                    transport: {
+                        read: { url: "/Home/GetAllGames", dataType: "json" },
+                        create: {
+                            url: "/Home/CreateGames",
+                            dataType: "json",
+                            type: "POST",
+                            contentType: "application/json" // Ключ: Отправляем JSON
+                        },
+                        update: {
+                            // Kendo добавит ID в строку запроса: /Home/UpdateGame?id=X
+                            url: "/Home/UpdateGame",
+                            dataType: "json",
+                            type: "PUT", // Используем PUT для обновления
+                            contentType: "application/json"
+                        },
+                        destroy: {
+                            // Kendo добавит ID в строку запроса: /Home/DeleteGame?id=X
+                            url: "/Home/DeleteGame",
+                            type: "POST", // Используем POST, как настроено в контроллере
+                            dataType: "json"
+                        },
+                        parameterMap: parameterMap // Используем нашу функцию преобразования
                     },
-                    error: function (xhr, status, err) {
-                        console.error("Products request failed:", status, err);
-                    }
-                });
-
-                $("#inStockProductsGrid").kendoGrid({
-                    dataSource: inStockDS,
-                    pageable: true,
-                    height: 400,
-                    width: 625,
-                    columns: [
-                        { draggable: true, width: "40px" },
-                        { field: "ProductName", title: "Product Name", width: "200px" },
-                        { field: "Genre", title: "Genre", format: "{0:c}", width: "140px" },
-                        { field: "Singleplayer", title: "Singleplayer", format: "{0:c}", width: "140px" },
-                        { field: "Developer", title: "Developer", format: "{0:c}", width: "140px" },
-                        { field: "Publisher", title: "Publisher", format: "{0:c}", width: "140px" },
-                        { field: "launched", title: "Launched", format: "{0:c}", width: "140px" },
-                        { field: "FSKRating", title: "FSK-Rating", format: "{0:c}", width: "140px" }],
-                       
-                    dataBound: onDataBound,
-                    navigatable: true,
-                    reorderable: { rows: true },
-                    rowReorder: onRowReordered
-                });
-
-                $("#discontinuedGrid").kendoGrid({
-                    dataSource: discontinuedDS,
-                    pageable: true,
-                    height: 400,
-                    width: 625,
-                    columns: [
-                        { draggable: true, width: "40px" },
-                        { field: "ProductName", title: "Name", width: "200px" },
-                        { field: "Gender", title: "Gender", format: "{0:c}", width: "140px" },
-                        {
-                            field: "Discontinued", title: "In Stock",
-                            template: "<span id='badge_#=ProductID#' class='badgeTemplate'></span>",
-                            attributes: { style: "text-align: center;" },
-                            width: "130px"
-                        }],
-                    dataBound: onDataBound,
-                    navigatable: true,
-                    reorderable: { rows: true },
-                    rowReorder: onRowReordered
-                });
-
-                // Setup cross-grid drag & drop. Called after grids are created and also from onDataBound so targets/draggables stay in sync.
-                function setupCrossGridDragDrop() {
-                    var inGrid = $("#inStockProductsGrid").data("kendoGrid");
-                    var discGrid = $("#discontinuedGrid").data("kendoGrid");
-                    if (!inGrid || !discGrid) return;
-
-                    // Remove any previous draggable/dropTarget instances (defensive)
-                    try {
-                        inGrid.table.find("tbody").each(function () {
-                            var existing = $(this).data("kendoDraggableInstance");
-                            if (existing && existing.destroy) existing.destroy();
-                        });
-                        discGrid.table.find("tbody").each(function () {
-                            var existing = $(this).data("kendoDropTargetInstance");
-                            if (existing && existing.destroy) existing.destroy();
-                        });
-                    } catch (ignore) {}
-
-                    // make rows draggable (group same for both grids)
-                    inGrid.table.kendoDraggable({
-                        filter: "tbody > tr",
-                        group: "gridRows",
-                        hint: function (e) {
-                            // clone the row as hint
-                            return e.clone().css({ "background": "#fff", "box-shadow": "0 2px 6px rgba(0,0,0,0.2)" });
-                        }
-                    });
-
-                    discGrid.table.kendoDraggable({
-                        filter: "tbody > tr",
-                        group: "gridRows",
-                        hint: function (e) {
-                            return e.clone().css({ "background": "#fff", "box-shadow": "0 2px 6px rgba(0,0,0,0.2)" });
-                        }
-                    });
-
-                    // each grid table accepts drops from the other grid
-                    [inGrid, discGrid].forEach(function (targetGrid) {
-                        targetGrid.table.kendoDropTarget({
-                            group: "gridRows",
-                            dragenter: function () {
-                                targetGrid.table.addClass("k-grid-drop-target");
-                            },
-                            dragleave: function () {
-                                targetGrid.table.removeClass("k-grid-drop-target");
-                            },
-                            drop: function (ev) {
-                                targetGrid.table.removeClass("k-grid-drop-target");
-                                // identify dragged row and its source grid
-                                var draggable = ev.draggable;
-                                var draggedRow = draggable.currentTarget || draggable.element;
-                                var sourceGrid = draggedRow.closest(".k-grid").data("kendoGrid");
-                                if (!sourceGrid) return;
-
-                                var sourceItem = sourceGrid.dataItem(draggedRow);
-                                if (!sourceItem || sourceItem.dummy) return; // ignore placeholders
-
-                                // remove from source and add to target at end
-                                // convert to plain object to avoid references to removed DS models
-                                var plain = sourceItem.toJSON ? sourceItem.toJSON() : $.extend({}, sourceItem);
-                                sourceGrid.dataSource.remove(sourceItem);
-                                targetGrid.dataSource.add(plain);
-
-                                // if source became empty, ensure placeholder present
-                                if (sourceGrid.dataSource.view().length === 0) {
-                                    sourceGrid.dataSource.add(tr);
-                                }
-
-                                // remove placeholder from target if present
-                                var placeholder = targetGrid.dataSource.get(tr.ProductID);
-                                if (placeholder) targetGrid.dataSource.remove(placeholder);
+                    schema: {
+                        model: {
+                            id: "GameID", // Уникальный ключ
+                            fields: {
+                                GameID: { type: "number", editable: false, nullable: true },
+                                SpielName: { type: "string", validation: { required: true } },
+                                Genre: { type: "string" },
+                                ErscheingungsJahr: { type: "date" },
+                                SinglePlayer: { type: "boolean" },
+                                Entwickler: { type: "string" },
+                                Publisher: { type: "string" }
                             }
-                        });
-                    });
-                }
-
-                function onDataBound(e) {
-                    var grid = this;
-
-                    // Defensive: ensure dataItem exists (empty rows may not have dataItem)
-                    if (grid.dataSource.get && grid.dataSource.get(tr.ProductID) && grid.dataSource.view().length > 1) {
-                        grid.dataSource.remove(grid.dataSource.get(tr.ProductID));
-                    }
-
-                    if (grid.dataSource.view().length === 0) {
-                        grid.dataSource.add(tr);
-                    }
-
-                    grid.table.find("tr").each(function () {
-                        var dataItem = grid.dataItem(this);
-                        if (!dataItem) return;
-                        var themeColor = dataItem.Discontinued ? 'error' : 'success';
-                        var text = dataItem.Discontinued ? 'not available' : 'available';
-
-                        $(this).find(".badgeTemplate").kendoBadge({
-                            themeColor: themeColor,
-                            text: text
-                        });
-                    });
-
-                    // Re-setup drag/drop targets after rows change
-                    setupCrossGridDragDrop();
-                }
-
-                function onRowReordered(ev) {
-                    var grid = ev.sender, dataSource = grid.dataSource, externalGrid, externalDataItem;
-
-                    if (ev.oldIndex === -1) { // Row dropped from external grid
-                        ev.preventDefault();
-                        externalGrid = ev.row.parents(".k-grid").data("kendoGrid");
-                        externalDataItem = externalGrid.dataItem(ev.row);
-
-                        if (!externalDataItem.dummy) {
-                            externalDataItem.Discontinued = !externalDataItem.Discontinued;
-                            externalGrid.dataSource.remove(externalDataItem);
-                            dataSource.insert(ev.newIndex, externalDataItem.toJSON());
-
-                            var dummyRow = dataSource.get(tr.ProductID);
-                            if (dummyRow) dataSource.remove(dummyRow);
                         }
-                    }
+                    },
+                    pageSize: 10
+                });
 
-                    if (externalGrid && externalGrid.dataSource.total() === 0) {
-                        externalGrid.dataSource.add(tr);
-                    }
+                // --- КОНФИГУРАЦИЯ PERSON DATASOURCE ---
+                var personDS = new kendo.data.DataSource({
+                    transport: {
+                        read: { url: "/Home/GetAllPersons", dataType: "json" },
+                        create: {
+                            url: "/Home/CreatePerson",
+                            dataType: "json",
+                            type: "POST",
+                            contentType: "application/json"
+                        },
+                        update: {
+                            url: "/Home/UpdatePerson",
+                            dataType: "json",
+                            type: "PUT",
+                            contentType: "application/json"
+                        },
+                        destroy: {
+                            url: "/Home/DeletePerson",
+                            type: "POST",
+                            dataType: "json"
+                        },
+                        parameterMap: parameterMap
+                    },
+                    schema: {
+                        model: {
+                            id: "PersonId",
+                            fields: {
+                                PersonId: { type: "number", editable: false, nullable: true },
+                                Name: { type: "string", validation: { required: true } },
+                                Geschlecht: { type: "string" },
+                                Alter: { type: "date" }
+                            }
+                        }
+                    },
+                    pageSize: 10
+                });
+
+                // --- 2. ИНИЦИАЛИЗАЦИЯ GRID (ИГРЫ) ---
+
+                $("#gamesGrid").kendoGrid({
+                    dataSource: gameDS,
+                    pageable: true,
+                    height: 400,
+                    width: 900,
+                    toolbar: ["create"], // Кнопка "Создать новую запись"
+                    editable: "popup", // Редактирование через всплывающее окно
+                    columns: [
+                        { field: "SpielName", title: "Game Name", width: "200px" },
+                        { field: "Genre", title: "Genre", width: "140px" },
+                        // Форматируем дату
+                        { field: "ErscheingungsJahr", title: "Launched", format: "{0:yyyy-MM-dd}", width: "140px", editor: customDateEditor },
+                        // Для булевых значений
+                        { field: "SinglePlayer", title: "Single Player", width: "100px", template: "#= SinglePlayer ? 'Yes' : 'No' #" },
+                        { field: "Entwickler", title: "Developer", width: "140px" },
+                        { field: "Publisher", title: "Publisher", width: "140px" },
+                        // Команда для Edit (Редактировать) и Destroy (Удалить)
+                        { command: ["edit", "destroy"], title: "&nbsp;", width: "180px" }
+                    ]
+                });
+
+                // --- 3. ИНИЦИАЛИЗАЦИЯ GRID (ПЕРСОНЫ) ---
+
+                $("#personsGrid").kendoGrid({
+                    dataSource: personDS,
+                    pageable: true,
+                    height: 400,
+                    width: 600,
+                    toolbar: ["create"], // Кнопка "Создать новую запись"
+                    editable: "popup", // Редактирование через всплывающее окно
+                    columns: [
+                        { field: "Name", title: "Name", width: "180px" },
+                        { field: "Geschlecht", title: "Gender", width: "120px" },
+                        // Форматируем дату
+                        { field: "Alter", title: "Date of Birth", format: "{0:yyyy-MM-dd}", width: "180px", editor: customDateEditor },
+                        // Команда для Edit (Редактировать) и Destroy (Удалить)
+                        { command: ["edit", "destroy"], title: "&nbsp;", width: "120px" }
+                    ]
+                });
+
+                // --- 4. ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ DATETIME (Для корректного ввода дат) ---
+                function customDateEditor(container, options) {
+                    $('<input data-bind="value:' + options.field + '"/>')
+                        .appendTo(container)
+                        .kendoDatePicker({
+                            format: "yyyy-MM-dd" // Убеждаемся, что формат соответствует ожидаемому DateOnly
+                        });
                 }
-
-                // initial setup once grids are created
-                setupCrossGridDragDrop();
             });
         })();
     </script>

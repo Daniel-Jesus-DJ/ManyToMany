@@ -5,10 +5,22 @@ using System.Text;
 using System.Threading.Tasks;
 using ManyToMany.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 
 namespace ManyToMany.Core.Data
 {
-    public  class ApplicationDBContext:DbContext 
+    public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDBContext>
+    {
+        public ApplicationDBContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<ApplicationDBContext>();
+            optionsBuilder.UseSqlServer("Server=NB-Oskonbae-aad;Database=ManyToMany;Trusted_Connection=True;Encrypt=False;", sqlOptions => sqlOptions.EnableRetryOnFailure());
+
+            return new ApplicationDBContext(optionsBuilder.Options);
+        }
+    }
+
+    public class ApplicationDBContext:DbContext 
     {
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
