@@ -13,8 +13,9 @@ namespace ManyToMany.Core.Data
     {
         public ApplicationDBContext CreateDbContext(string[] args)
         {
+          
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDBContext>();
-            optionsBuilder.UseSqlServer("Server=NB-Oskonbae-aad;Database=ManyToMany;Trusted_Connection=True;Encrypt=False;", sqlOptions => sqlOptions.EnableRetryOnFailure());
+            optionsBuilder.UseSqlServer("Server=db34347.public.databaseasp.net; Database=db34347; User Id=db34347; Password=k@2E9eP#mF?7; Encrypt=False; MultipleActiveResultSets=True", sqlOptions => sqlOptions.EnableRetryOnFailure());
 
             return new ApplicationDBContext(optionsBuilder.Options);
         }

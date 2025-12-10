@@ -1,174 +1,76 @@
-﻿@model IEnumerable<ManyToMany.Core.Models.Game>
+﻿@model GamePerson
 @{
-    ViewData["Title"] = "Home";
+	var games = Model.Games;
+	var persons = Model.Persons;
 }
 
-<div id="example">
-    <div class="k-d-flex k-flex-wrap">
-        <div class="k-flex-grow">
-            <h4 class="mb-sm">🎮 Games</h4>
-            <div id="gamesGrid"></div>
-        </div>
-        <div class="k-flex-grow">
-            <h4 class="mb-sm">👤 Players</h4>
-            <div id="personsGrid"></div>
-        </div>
-    </div>
-</div>
 
-@section Scripts {
-    <script>
-        (function () {
-            if (!window.kendo) {
-                console.error("Kendo UI is not loaded. Check _Layout.cshtml script order.");
-                return;
-            }
 
-            $(function () {
-                // --- 1. КОНФИГУРАЦИЯ ИСТОЧНИКОВ ДАННЫХ (DATASOURCES) ---
+	<h2>Games <a asp-action="CreateGames" asp-controller="Home" class="btn btn-success btn-sm">AddGame</a> </h2>
+	<table class=" table table-bordered table-striped">
+		
+		<tr>
+			<th>Game</th>
+			<th>Genre</th>
+			<th>Realease date</th>
+			<th>SinglePlayer</th>
+			<th>Developer</th>
+			<th>Publisher</th>
+			<th>Persons</th>
+			<th>Actions</th>
+		</tr>
+		<tr>
+			@foreach(var game in games)
+			{
+				<td>@game.SpielName</td>
+				<td>@game.Genre</td>
+				<td>@game.ErscheingungsJahr</td>
+				<td>@game.SinglePlayer</td>
+				<td>@game.Entwickler</td>
+				<td>@game.Publisher</td>
+				
+				<td>
+					@foreach(var person in game.Persons)
+					{
+						<p>@person.Name</p>
+					}
+				</td>
+				<td>
+					<a asp-action="UpdateGame" class="btn btn-success" asp-route-id="@game.GameID">Edit</a>
+					<a asp-action="deleteGame" class="btn btn-success"  asp-route-id="@game.GameID">Delete</a>
+					</td>
+			}
+		</tr>
+	</table>
+	<h2>Person <a asp-action="CreatePerson" class="btn btn-success btn-sm" >Add Person</a> </h2>
+	<table class=" table table-bordered table-striped">
+		<tr>
+			<th>Name</th>
+			<th>Sex</th>
+			<th>Age</th>
+			<th>Games</th>
+			<th>Actions</th>
+		
+		</tr>
+		<tr>
+			@foreach (var person in persons)
+			{
+				<td>@person.Name</td>
+				<td>@person.Geschlecht</td>
+				<td>@person.Alter</td>
+			
+							
+				<td>
+					@foreach (var game in person.Games)
+					{
+						<p>@game.SpielName</p>
+					}
+				</td>
+				<td>
+					<a asp-action="UpdateGame" class="btn" asp-route-id="@person.PersonId">Edit</a>
+					<a asp-action="deleteGame" class="btn" asp-route-id="@person.PersonId">Delete</a>
+				</td>
+			}
+		</tr>
+	</table>
 
-                // Функция для преобразования данных в JSON для отправки на сервер.
-                // Kendo Grid по умолчанию отправляет данные в формате form-urlencoded,
-                // но нам нужен JSON для [FromBody] в контроллере.
-                function parameterMap(options, operation) {
-                    if (operation !== "read" && options.models) {
-                        // Kendo отправляет массив моделей, но наш API принимает одну модель в теле.
-                        // Сериализуем первый элемент массива в JSON-строку.
-                        return JSON.stringify(options.models[0]);
-                    }
-                    return options; // Для READ возвращаем параметры как есть
-                }
-
-                // --- КОНФИГУРАЦИЯ GAME DATASOURCE ---
-                var gameDS = new kendo.data.DataSource({
-                    transport: {
-                        read: { url: "/Home/GetAllGames", dataType: "json" },
-                        create: {
-                            url: "/Home/CreateGames",
-                            dataType: "json",
-                            type: "POST",
-                            contentType: "application/json" // Ключ: Отправляем JSON
-                        },
-                        update: {
-                            // Kendo добавит ID в строку запроса: /Home/UpdateGame?id=X
-                            url: "/Home/UpdateGame",
-                            dataType: "json",
-                            type: "PUT", // Используем PUT для обновления
-                            contentType: "application/json"
-                        },
-                        destroy: {
-                            // Kendo добавит ID в строку запроса: /Home/DeleteGame?id=X
-                            url: "/Home/DeleteGame",
-                            type: "POST", // Используем POST, как настроено в контроллере
-                            dataType: "json"
-                        },
-                        parameterMap: parameterMap // Используем нашу функцию преобразования
-                    },
-                    schema: {
-                        model: {
-                            id: "GameID", // Уникальный ключ
-                            fields: {
-                                GameID: { type: "number", editable: false, nullable: true },
-                                SpielName: { type: "string", validation: { required: true } },
-                                Genre: { type: "string" },
-                                ErscheingungsJahr: { type: "date" },
-                                SinglePlayer: { type: "boolean" },
-                                Entwickler: { type: "string" },
-                                Publisher: { type: "string" }
-                            }
-                        }
-                    },
-                    pageSize: 10
-                });
-
-                // --- КОНФИГУРАЦИЯ PERSON DATASOURCE ---
-                var personDS = new kendo.data.DataSource({
-                    transport: {
-                        read: { url: "/Home/GetAllPersons", dataType: "json" },
-                        create: {
-                            url: "/Home/CreatePerson",
-                            dataType: "json",
-                            type: "POST",
-                            contentType: "application/json"
-                        },
-                        update: {
-                            url: "/Home/UpdatePerson",
-                            dataType: "json",
-                            type: "PUT",
-                            contentType: "application/json"
-                        },
-                        destroy: {
-                            url: "/Home/DeletePerson",
-                            type: "POST",
-                            dataType: "json"
-                        },
-                        parameterMap: parameterMap
-                    },
-                    schema: {
-                        model: {
-                            id: "PersonId",
-                            fields: {
-                                PersonId: { type: "number", editable: false, nullable: true },
-                                Name: { type: "string", validation: { required: true } },
-                                Geschlecht: { type: "string" },
-                                Alter: { type: "date" }
-                            }
-                        }
-                    },
-                    pageSize: 10
-                });
-
-                // --- 2. ИНИЦИАЛИЗАЦИЯ GRID (ИГРЫ) ---
-
-                $("#gamesGrid").kendoGrid({
-                    dataSource: gameDS,
-                    pageable: true,
-                    height: 400,
-                    width: 900,
-                    toolbar: ["create"], // Кнопка "Создать новую запись"
-                    editable: "popup", // Редактирование через всплывающее окно
-                    columns: [
-                        { field: "SpielName", title: "Game Name", width: "200px" },
-                        { field: "Genre", title: "Genre", width: "140px" },
-                        // Форматируем дату
-                        { field: "ErscheingungsJahr", title: "Launched", format: "{0:yyyy-MM-dd}", width: "140px", editor: customDateEditor },
-                        // Для булевых значений
-                        { field: "SinglePlayer", title: "Single Player", width: "100px", template: "#= SinglePlayer ? 'Yes' : 'No' #" },
-                        { field: "Entwickler", title: "Developer", width: "140px" },
-                        { field: "Publisher", title: "Publisher", width: "140px" },
-                        // Команда для Edit (Редактировать) и Destroy (Удалить)
-                        { command: ["edit", "destroy"], title: "&nbsp;", width: "180px" }
-                    ]
-                });
-
-                // --- 3. ИНИЦИАЛИЗАЦИЯ GRID (ПЕРСОНЫ) ---
-
-                $("#personsGrid").kendoGrid({
-                    dataSource: personDS,
-                    pageable: true,
-                    height: 400,
-                    width: 600,
-                    toolbar: ["create"], // Кнопка "Создать новую запись"
-                    editable: "popup", // Редактирование через всплывающее окно
-                    columns: [
-                        { field: "Name", title: "Name", width: "180px" },
-                        { field: "Geschlecht", title: "Gender", width: "120px" },
-                        // Форматируем дату
-                        { field: "Alter", title: "Date of Birth", format: "{0:yyyy-MM-dd}", width: "180px", editor: customDateEditor },
-                        // Команда для Edit (Редактировать) и Destroy (Удалить)
-                        { command: ["edit", "destroy"], title: "&nbsp;", width: "120px" }
-                    ]
-                });
-
-                // --- 4. ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ DATETIME (Для корректного ввода дат) ---
-                function customDateEditor(container, options) {
-                    $('<input data-bind="value:' + options.field + '"/>')
-                        .appendTo(container)
-                        .kendoDatePicker({
-                            format: "yyyy-MM-dd" // Убеждаемся, что формат соответствует ожидаемому DateOnly
-                        });
-                }
-            });
-        })();
-    </script>
-}

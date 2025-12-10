@@ -1,0 +1,39 @@
+﻿@model Person
+@{
+	ViewData["Title"] = "CreatePerson";
+}
+<h1>CreatePerson</h1>
+<form asp-action="CreatePerson" method="post">
+	<div class="form-group">
+		<label asp-for="Name" class="control-label"></label>
+		<input asp-for="Name" class="form-control" />
+		<span asp-validation-for="Name" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label asp-for="Geschlecht" class="control-label"></label>
+		<input asp-for="Geschlecht" class="form-control" />
+		<span asp-validation-for="Geschlecht" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label asp-for="Alter" class="control-label"></label>
+		<input asp-for="Alter" class="form-control" />
+		<span asp-validation-for="Alter" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label class="control-label">Please choose one or more Games:</label>
+		@foreach (var game in (List<SelectListItem>)ViewBag.Games)
+		{
+			<div class="form-check">
+				<input type="checkbox"
+					   name="SelectedGameIds"
+					   value="@game.Value"
+					   class=" form-check"
+					   @(game.Selected ? "checked" : "") />
+				<label class="form-check-label">@game.Text</label>
+			</div>
+}
+	</div>
+	<div class="form-group">
+		<input type="submit" value="Create" class="btn btn-primary" />
+	</div>
+</form>

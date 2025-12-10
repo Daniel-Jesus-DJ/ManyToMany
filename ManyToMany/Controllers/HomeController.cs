@@ -1,110 +1,154 @@
 using System.Diagnostics;
+using ManyToMany.Core.Data;
 using ManyToMany.Core.Models;
 using Microsoft.AspNetCore.Mvc;
-using ManyToMany.Core.Data;
-using Microsoft.EntityFrameworkCore; 
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace ManyToMany.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ApplicationDBContext _context;
-  
+
         public HomeController(ApplicationDBContext context)
         {
             _context = context;
         }
 
-        public IActionResult Index()
+
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var games = await _context.Games.Include(g => g.Persons).ToListAsync();
+            var persons = await _context.Persons.Include(p => p.Games).ToListAsync();
+            GamePerson gamePerson = new GamePerson
+            {
+                Games = games,
+                Persons = persons
+            };
+            return View(gamePerson);
         }
 
         // --- GAME CRUD OPERATIONS ---
 
         // GET: /Home/GetAllGames
         [HttpGet]
-        public async Task<IActionResult> GetAllGames() 
+        public async Task<IActionResult> GetAllGames()
         {
-           
-            var games = await _context.Games.Include(g=>g.Persons).ToListAsync();
-            return Ok(games);
+
+            var games = await _context.Games.Include(g => g.Persons).ToListAsync();
+            return View(games);
         }
 
         // GET: /Home/GetGameById/{id}
         [HttpGet]
-        public async Task<IActionResult> GetGameById(int id) 
+        public async Task<IActionResult> GetGameById(int id)
         {
             var game = await _context.Games.Include(g => g.Persons).FirstOrDefaultAsync(g => g.GameID == id);
 
-            if (game == null) 
+            if (game == null)
             {
                 return NotFound();
             }
 
-            return Ok(game);
+            return View(game);
         }
 
-        // POST: /Home/CreateGames
+        // POST und Get: /Home/CreateGames
+
+        [HttpGet]
+        public async Task<IActionResult> CreateGames()
+        {
+            ViewBag.Persons = await _context.Persons
+                .Select(p => new SelectListItem
+                {
+                    Value = p.PersonId.ToString(),
+                    Text = p.Name
+                })
+                .ToListAsync();
+
+            var model = new Game();
+            model.SelectedPersonIds = new List<int>();
+
+            return View(model);
+        }
+
         [HttpPost]
-        public async Task<IActionResult> CreateGames([FromBody] Game game)
+        public async Task<IActionResult> CreateGames(Game game)
         {
 
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return View(game);
             }
+           var selectedPersons = await _context.Persons
+                .Where(p => game.SelectedPersonIds.Contains(p.PersonId))
+                .ToListAsync();
+            game.Persons = selectedPersons;
 
-            _context.Games.AddAsync(game);
-            
+            await _context.Games.AddAsync(game);
+
             await _context.SaveChangesAsync();
 
-  
-            return CreatedAtAction(nameof(GetGameById), new { id = game.GameID }, game);
+
+            return RedirectToAction("Index");
         }
 
         // PUT: /Home/UpdateGame/{id}
-        [HttpPut]
-        public async Task<IActionResult> UpdateGame(int id, [FromBody] Game updatedGame)
+        public async Task<IActionResult> UpdateGame(int id)
         {
-            if (id != updatedGame.GameID)
-            {
-                return BadRequest();
-            }
+            var game = _context.Games
+        .Include(g => g.Persons)
+        .FirstOrDefault(g => g.GameID == id);
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-           
-            //best way to use optimized update
-            _context.Entry(updatedGame).State = EntityState.Modified;
+            ViewBag.Persons = _context.Persons
+                .Select(p => new SelectListItem
+                {
+                    Value = p.PersonId.ToString(),
+                    Text = p.Name,
+                    Selected = game.Persons.Any(gp => gp.PersonId == p.PersonId)
+                })
+                .ToList();
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-            
-                if (!_context.Games.Any(e => e.GameID == id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-          
-            return NoContent();
+            game.SelectedPersonIds = game.Persons
+                .Select(p => p.PersonId)
+                .ToList();
+
+            return View(game);
+        }
+        [HttpPost]
+        public async Task<IActionResult> UpdateGame(Game model)
+        {
+            var game = _context.Games
+         .Include(g => g.Persons)
+         .FirstOrDefault(g => g.GameID == model.GameID);
+
+         
+            game.SpielName = model.SpielName;
+            game.Genre = model.Genre;
+            game.ErscheingungsJahr = model.ErscheingungsJahr;
+            game.SinglePlayer = model.SinglePlayer;
+            game.Entwickler = model.Entwickler;
+            game.Publisher = model.Publisher;
+
+            //  Many-to-Many
+            game.Persons.Clear();
+            var selectedPersons = _context.Persons
+                .Where(p => model.SelectedPersonIds.Contains(p.PersonId))
+                .ToList();
+
+            game.Persons = selectedPersons;
+
+            _context.SaveChanges();
+
+            return RedirectToAction("Index");
         }
 
         // POST: /Home/DeleteGame/{id} 
         [HttpDelete]
         public async Task<IActionResult> DeleteGame(int id)
         {
-           
+
             var game = await _context.Games.FindAsync(id);
 
             if (game == null)
@@ -113,7 +157,7 @@ namespace ManyToMany.Controllers
             }
 
             _context.Games.Remove(game);
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
@@ -124,7 +168,7 @@ namespace ManyToMany.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllPersons()
         {
-            
+
             var persons = await _context.Persons.Include(p => p.Games).ToListAsync();
             return Ok(persons);
         }
@@ -133,7 +177,7 @@ namespace ManyToMany.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPerson(int id)
         {
-        
+
             var person = await _context.Persons
                                       .Include(p => p.Games)
                                       .FirstOrDefaultAsync(p => p.PersonId == id);
@@ -146,18 +190,44 @@ namespace ManyToMany.Controllers
         }
 
         // POST: /Home/CreatePerson
+        [HttpGet]
+        public async Task<IActionResult> CreatePerson()
+        {
+            ViewBag.Games = await _context.Games
+                .Select(g => new SelectListItem
+                {
+                    Value = g.GameID.ToString(),
+                    Text = g.SpielName
+                })
+                .ToListAsync();
+
+            var model = new Person();
+            model.SelectedGameIds = new List<int>();
+
+            return View(model);
+        }
+
+       
+        
         [HttpPost]
-        public async Task<IActionResult> CreatePerson([FromBody] Person person)
+        public async Task<IActionResult> CreatePerson(Person person)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return View(person);
             }
+          var selectedGames = await _context.Games
+                .Where(g => person.SelectedGameIds.Contains(g.GameID))
+                .ToListAsync();
+            person.Games= selectedGames;
 
-            _context.Persons.Add(person);
+            await _context.Persons.AddAsync(person);
+
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetPerson), new { id = person.PersonId }, person);
+
+            return RedirectToAction("Index");
+
         }
 
         // PUT: /Home/UpdatePerson/{id}
@@ -169,7 +239,7 @@ namespace ManyToMany.Controllers
                 return BadRequest();
             }
 
-            
+
             _context.Entry(updatedPerson).State = EntityState.Modified;
 
             try
