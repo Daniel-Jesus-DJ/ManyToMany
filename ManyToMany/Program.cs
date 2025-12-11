@@ -9,8 +9,11 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+
+
+var conntectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(conntectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
 var app = builder.Build();
 

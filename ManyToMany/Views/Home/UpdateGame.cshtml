@@ -1,0 +1,59 @@
+﻿@model Game
+@{
+	ViewData["Title"] = "UpdateGame";
+}
+<h1>UpdateGame</h1>
+<form action="UpdateGame" method="post" class="form">
+	<input type="hidden" asp-for="GameID" />
+	<div class="form-group">
+		<label asp-for="SpielName" class="control-label"></label>
+		<input asp-for="SpielName" class="form-control" />
+		<span asp-validation-for="SpielName" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label asp-for="Genre" class="control-label"></label>
+		<input asp-for="Genre" class="form-control" />
+		<span asp-validation-for="Genre" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label asp-for="ErscheingungsJahr" class="control-label"></label>
+		<input type="date" asp-for="ErscheingungsJahr" class="form-control" />
+		<span asp-validation-for="ErscheingungsJahr" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label asp-for="SinglePlayer" class="control-label"></label>
+		<input type="checkbox" asp-for="SinglePlayer" class="form-control" />
+		<span asp-validation-for="SinglePlayer" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label asp-for="Entwickler" class="control-label"></label>
+		<input asp-for="Entwickler" class="form-control" />
+		<span asp-validation-for="Entwickler" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label asp-for="Publisher" class="control-label"></label>
+		<input type="checkbox" asp-for="Publisher" class="form-control" />
+		<span asp-validation-for="Publisher" class="text-danger"></span>
+	</div>
+	<div class="form-group">
+		<label class="control-label">Please choose one or more Persons:</label>
+
+		@foreach (var person in (List<SelectListItem>)ViewBag.Persons)
+		{
+			<div class="form-check">
+				<input type="checkbox"
+					   name="SelectedPersonIds"
+					   value="@person.Value"
+					   class="form-check-input"
+					   @(person.Selected ? "checked" : "") />
+
+				<label class="form-check-label">@person.Text</label>
+			</div>
+		}
+	</div>
+
+	<div>
+		<input type="submit" value="Update" class="btn btn-primary" />
+	</div>
+
+</form>
