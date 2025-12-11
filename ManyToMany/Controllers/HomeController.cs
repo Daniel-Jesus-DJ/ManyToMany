@@ -76,9 +76,15 @@ namespace ManyToMany.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateGames(Game game)
         {
-
-            if (!ModelState.IsValid)
+           if(!ModelState.IsValid)
             {
+                ViewBag.Persons = await _context.Persons
+                .Select(p => new SelectListItem
+                {
+                    Value = p.PersonId.ToString(),
+                    Text = p.Name
+                })
+                .ToListAsync();
                 return View(game);
             }
            var selectedPersons = await _context.Persons
@@ -212,6 +218,13 @@ namespace ManyToMany.Controllers
         [HttpPost]
         public async Task<IActionResult> CreatePerson(Person person)
         {
+            ViewBag.Games = await _context.Games
+               .Select(g => new SelectListItem
+               {
+                   Value = g.GameID.ToString(),
+                   Text = g.SpielName
+               })
+               .ToListAsync();
             if (!ModelState.IsValid)
             {
                 return View(person);
