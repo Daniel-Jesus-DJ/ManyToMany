@@ -29,12 +29,12 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Главная</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home/Startseite</a>
                         </li>
                         @if (User.IsInRole("Admin"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark fw-bold" asp-controller="Admin" asp-action="Index">Админка</a>
+                                <a class="nav-link text-dark fw-bold" asp-controller="Admin" asp-action="Index">Admin</a>
                             </li>
                         }
                     </ul>
@@ -47,17 +47,17 @@
                             </li>
                             <li class="nav-item">
                                 <form class="form-inline" asp-controller="Account" asp-action="Logout" method="post">
-                                    <button type="submit" class="nav-link btn btn-link text-dark">Выйти</button>
+                                    <button type="submit" class="nav-link btn btn-link text-dark">Abmelden</button>
                                 </form>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Регистрация</a>
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Registration</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Вход</a>
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                         }
                     </ul>

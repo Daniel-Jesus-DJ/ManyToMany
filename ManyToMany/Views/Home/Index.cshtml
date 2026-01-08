@@ -1,11 +1,11 @@
 ﻿@model IEnumerable<Game>
 
 @{
-    ViewData["Title"] = "Магазин Игр";
+    ViewData["Title"] = "Game Shop";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Магазин Игр</h1>
+    <h1 class="display-4">Game Shop</h1>
     @if (TempData["Message"] != null)
     {
         <div class="alert alert-info">@TempData["Message"]</div>
@@ -16,9 +16,9 @@
         <form asp-action="Index" method="get" class="d-flex">
             <input type="text" name="searchString" class="form-control me-2"
                    value="@ViewData["CurrentFilter"]"
-                   placeholder="Поиск по названию или жанру..." />
-            <button type="submit" class="btn btn-outline-primary">Найти</button>
-            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Сбросить</a>
+                   placeholder="Suchung bei Genre oder bei Name..." />
+            <button type="submit" class="btn btn-outline-primary">Such</button>
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Abrechnen</a>
         </form>
     </div>
 </div>
@@ -32,13 +32,13 @@
                     <h5 class="card-title">@game.SpielName</h5>
                     <h6 class="card-subtitle mb-2 text-muted">@game.Entwickler</h6>
                     <p class="card-text">
-                        Жанры:
+                        Genre:
                         @foreach (var g in game.Genres)
                         {
                             <span class="badge bg-secondary">@g.GenreName</span>
                         }
                     </p>
-                    <p>Дата выхода: @game.ErscheingungsJahr</p>
+                    <p>ErscheingungsJahr: @game.ErscheingungsJahr</p>
                 </div>
                 <div class="card-footer bg-white border-top-0">
                     <form asp-action="Buy" asp-controller="Home" method="post">
@@ -46,11 +46,11 @@
 
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <button type="submit" class="btn btn-success w-100">Купить</button>
+                            <button type="submit" class="btn btn-success w-100">Kaufen</button>
                         }
                         else
                         {
-                            <button type="submit" class="btn btn-primary w-100">Войти чтобы купить</button>
+                            <button type="submit" class="btn btn-primary w-100">Anmelden zu kaufen</button>
                         }
                     </form>
                 </div>
