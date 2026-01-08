@@ -1,25 +1,58 @@
-using Microsoft.EntityFrameworkCore;
 using ManyToMany.Core.Data;
-
+using ManyToMany.Core.Data; // Проверь namespace DbSeeder-а
+using ManyToMany.Core.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using ManyToMany.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// --- 1. СТРОКА ПОДКЛЮЧЕНИЯ (Этого не хватало!) ---
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+// --- 2. РЕГИСТРАЦИЯ DB CONTEXT (Этого не хватало!) ---
+// Без этой строки приложение падает с ошибкой "Unable to resolve service"
+builder.Services.AddDbContext<ApplicationDBContext>(options =>
+    options.UseSqlServer(connectionString));
+
+// --- 3. НАСТРОЙКА IDENTITY (С поддержкой РОЛЕЙ) ---
+// AddDefaultIdentity не поддерживает роли по умолчанию. 
+// Используем AddIdentity<Person, IdentityRole>, чтобы работал Админ.
+builder.Services.AddIdentity<Person, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = false; // Упростили пароли для теста
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 4;
+})
+.AddEntityFrameworkStores<ApplicationDBContext>()
+.AddDefaultTokenProviders();
+
+// Добавляем MVC
 builder.Services.AddControllersWithViews();
 
-
-
-var conntectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseSqlServer(conntectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));
-
 var app = builder.Build();
+
+// --- 4. СОЗДАНИЕ АДМИНА ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        // Убедись, что класс DbSeeder существует и namespace верный
+        await DbSeeder.SeedRolesAndAdminAsync(services);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Ошибка создания админа: " + ex.Message);
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -28,7 +61,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthorization();
+// --- 5. ВАЖНЫЙ ПОРЯДОК MIDDLEWARE ---
+app.UseAuthentication(); // <-- Обязательно добавь это (проверка "кто ты?")
+app.UseAuthorization();  // <-- Потом это (проверка "можно ли тебе сюда?")
 
 app.MapControllerRoute(
     name: "default",

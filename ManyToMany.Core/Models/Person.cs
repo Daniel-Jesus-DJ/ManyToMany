@@ -1,22 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Microsoft.Identity.Client;
 
 namespace ManyToMany.Core.Models
 {
-    public class Person
+    // Наследуемся от IdentityUser!
+    public class Person : IdentityUser
     {
-        public int PersonId { get; set; }
-        public string Name { get; set; }
-        public string Geschlecht { get; set; }
+        // PersonId удаляем — он теперь в IdentityUser и называется просто "Id" (тип string)
+        // Email удаляем — он тоже есть в IdentityUser
+
+        public string Name { get; set; } // Можно оставить как фамилию
+        public string FirstName { get; set; }
+        public Geschlecht Geschlecht { get; set; }
         public DateOnly Alter { get; set; }
 
-        public ICollection<Game>? Games { get; set; }
+        // ВАЖНО: Для магазина лучше использовать явную связь через UserGame,
+        // чтобы знать ДАТУ покупки.
+        public ICollection<UserGame> UserGames { get; set; }
+
         [NotMapped]
         public List<int> SelectedGameIds { get; set; }
     }
