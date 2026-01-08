@@ -1,117 +1,60 @@
-﻿@model GamePerson
+﻿@model IEnumerable<Game>
+
 @{
-	var games = Model.Games;
-	var persons = Model.Persons;
+    ViewData["Title"] = "Магазин Игр";
 }
 
+<div class="text-center">
+    <h1 class="display-4">Магазин Игр</h1>
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-info">@TempData["Message"]</div>
+    }
+</div>
+<div class="row mb-3">
+    <div class="col-md-6 offset-md-3">
+        <form asp-action="Index" method="get" class="d-flex">
+            <input type="text" name="searchString" class="form-control me-2"
+                   value="@ViewData["CurrentFilter"]"
+                   placeholder="Поиск по названию или жанру..." />
+            <button type="submit" class="btn btn-outline-primary">Найти</button>
+            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Сбросить</a>
+        </form>
+    </div>
+</div>
 
+<div class="row mt-4">
+    @foreach (var game in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">@game.SpielName</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">@game.Entwickler</h6>
+                    <p class="card-text">
+                        Жанры:
+                        @foreach (var g in game.Genres)
+                        {
+                            <span class="badge bg-secondary">@g.GenreName</span>
+                        }
+                    </p>
+                    <p>Дата выхода: @game.ErscheingungsJahr</p>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <form asp-action="Buy" asp-controller="Home" method="post">
+                        <input type="hidden" name="gameId" value="@game.GameID" />
 
-<h2>Games <a asp-action="CreateGames" asp-controller="Home" class="btn btn-success btn-sm">AddGame</a> </h2>
-<table class=" table table-bordered table-striped">
-
-	<tr>
-		<th>Game</th>
-		<th>Genre</th>
-		<th>Release date</th>
-		<th>SinglePlayer</th>
-		<th>Developer</th>
-		<th>Publisher</th>
-		<th>Persons</th>
-		<th>Actions</th>
-	</tr>
-	@foreach (var game in games)
-		{
-	<tr>
-		
-			<td>@game.SpielName</td>
-			<td>@game.Genre</td>
-			<td>@game.ErscheingungsJahr</td>
-			<td>@game.SinglePlayer</td>
-			<td>@game.Entwickler</td>
-			<td>@game.Publisher</td>
-
-			<td>
-				@foreach (var person in game.Persons)
-				{
-					<p>@person.Name</p>
-				}
-			</td>
-			<td>
-				<a asp-action="UpdateGame" class="btn btn-success" asp-route-id="@game.GameID">Edit</a>
-				<a asp-action="deleteGame" class="btn btn-success" asp-route-id="@game.GameID">Delete</a>
-			</td>
-		
-	</tr>
-	}
-</table>
-<h2>Person <a asp-action="CreatePerson" class="btn btn-success btn-sm">Add Person</a> </h2>
-<table class=" table table-bordered table-striped">
-	<tr>
-		<th>Name</th>
-		<th>Sex</th>
-		<th>Age</th>
-		<th>Games</th>
-		<th>Actions</th>
-
-	</tr>
-	@foreach (var person in persons)
-		{
-	<tr>
-		
-			<td>@person.Name</td>
-			<td>@person.Geschlecht</td>
-			<td>@person.Alter</td>
-
-
-			<td>
-				@foreach (var game in person.Games)
-				{
-					<p>@game.SpielName</p>
-				}
-			</td>
-			<td>
-				<a asp-action="UpdatePerson" class="btn" asp-route-id="@person.PersonId">Edit</a>
-				<a asp-action="DeletePerson" class="btn" asp-route-id="@person.PersonId">Delete</a>
-			</td>
-		
-	</tr>
-	}
-</table>
-<h2>Games and Persons </h2>
-<table class=" table table-bordered table-striped">
-	@foreach(var game in games)
-	{
-	<tr>
-		<td>
-			<strong>@game.SpielName</strong>
-		</td>
-		<td>
-			<ul>
-				@foreach(var person in game.Persons)
-				{
-				<li>@person.Name</li>
-				}
-			</ul>
-		</td>
-	</tr>
-	}
-	@foreach(var person in persons)
-{
-	<tr>
-		<td>
-			<strong>@person.Name</strong>
-		</td>
-		<td>
-			<ul>
-				@foreach(var game in person.Games)
-				{
-				<li>@game.SpielName</li>
-				}
-			</ul>
-		</td>
-	</tr>
-	}
-
-
-</table>
-
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <button type="submit" class="btn btn-success w-100">Купить</button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-primary w-100">Войти чтобы купить</button>
+                        }
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+</div>

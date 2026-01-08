@@ -10,5 +10,6 @@ namespace ManyToMany.Core.Models
     {
         public IEnumerable<Game> Games { get; set; }
         public IEnumerable<Person> Persons { get; set; }
+        public IEnumerable<Genre> Genres { get; set; }
     }
 }

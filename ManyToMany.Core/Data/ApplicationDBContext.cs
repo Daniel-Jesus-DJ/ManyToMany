@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ManyToMany.Core.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -13,30 +14,47 @@ namespace ManyToMany.Core.Data
     {
         public ApplicationDBContext CreateDbContext(string[] args)
         {
-          
+
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDBContext>();
-            optionsBuilder.UseSqlServer("Server=db34347.public.databaseasp.net; Database=db34347; User Id=db34347; Password=k@2E9eP#mF?7; Encrypt=False; MultipleActiveResultSets=True", sqlOptions => sqlOptions.EnableRetryOnFailure());
+            optionsBuilder.UseSqlServer("Server=db37601.public.databaseasp.net; Database=db37601; User Id=db37601; Password=E+o3%a8GzA=7; Encrypt=True; TrustServerCertificate=True; MultipleActiveResultSets=True;", sqlOptions => sqlOptions.EnableRetryOnFailure());
 
             return new ApplicationDBContext(optionsBuilder.Options);
         }
     }
 
-    public class ApplicationDBContext:DbContext 
+    // Наследуемся от IdentityDbContext<Person>
+    public class ApplicationDBContext : IdentityDbContext<Person>
     {
         public ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : base(options)
         {
         }
-        public DbSet<Person> Persons { get; set; }
+
         public DbSet<Game> Games { get; set; }
+        public DbSet<Genre> Genres { get; set; }
+        public DbSet<UserGame> UserGames { get; set; } // Наша таблица покупок
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-           
-            modelBuilder.Entity<Person>()
-                .HasMany(p => p.Games)
-                .WithMany(g => g.Persons);
-            modelBuilder.Entity<Game>()
-                .HasMany(g => g.Persons)
-                .WithMany(p => p.Games);
+            base.OnModelCreating(modelBuilder); // Не удаляй это! Нужно для Identity.
+
+            // Настройка Many-to-Many для Игр и Пользователей через UserGame
+            modelBuilder.Entity<UserGame>()
+                .HasKey(ug => new { ug.PersonId, ug.GameId }); // Составной ключ
+
+            modelBuilder.Entity<UserGame>()
+                .HasOne(ug => ug.Person)
+                .WithMany(p => p.UserGames)
+                .HasForeignKey(ug => ug.PersonId);
+
+            modelBuilder.Entity<UserGame>()
+                .HasOne(ug => ug.Game)
+                .WithMany(g => g.UserGames)
+                .HasForeignKey(ug => ug.GameId);
+
+            // Жанры оставляем как было (простая связь)
+            modelBuilder.Entity<Genre>()
+                .HasMany(g => g.Games)
+                .WithMany(gm => gm.Genres);
         }
     }
 }

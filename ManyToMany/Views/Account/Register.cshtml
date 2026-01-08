@@ -1,0 +1,41 @@
+﻿@{
+    ViewData["Title"] = "Регистрация";
+}
+
+<h2>Регистрация</h2>
+
+<form asp-action="Register" method="post">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label>Имя</label>
+        <input name="firstName" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Фамилия</label>
+        <input name="name" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Email</label>
+        <input name="email" type="email" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Пароль</label>
+        <input name="password" type="password" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Дата рождения</label>
+        <input name="alter" type="date" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Пол</label>
+        <select name="geschlecht" class="form-control" asp-items="Html.GetEnumSelectList<ManyToMany.Core.Models.Geschlecht>()"></select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+</form>
