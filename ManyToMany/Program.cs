@@ -7,9 +7,10 @@ using ManyToMany.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. СТРОКА ПОДКЛЮЧЕНИЯ (Этого не хватало!) ---
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Add services to the container.
+builder.Services.AddControllersWithViews();
 
 // --- 2. РЕГИСТРАЦИЯ DB CONTEXT (Этого не хватало!) ---
 // Без этой строки приложение падает с ошибкой "Unable to resolve service"
@@ -51,6 +52,7 @@ using (var scope = app.Services.CreateScope())
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
+
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
