@@ -18,7 +18,7 @@
                             <ul>
                                 @foreach (var item in Model.GamesPopularity)
                                 {
-                                    <li>Game <b>@item.Key</b> war: @item.Value mal gekauft</li>
+                                    <li> <b>@item.Key</b> : @item.Value mal gekauft</li>
                                 }
                             </ul>
                         </div>
@@ -27,7 +27,7 @@
                             <ul>
                                 @foreach (var item in Model.UsersActivity)
                                 {
-                                    <li>User <b>@item.Key</b> hat : @item.Value gekauft</li>
+                                    <li> <b>@item.Key</b> hat : @item.Value Game(s) gekauft</li>
                                 }
                             </ul>
                         </div>
@@ -62,9 +62,9 @@
 
         <div class="col-md-6">
             <h3>👤 Users</h3>
-            <a asp-controller="Account" asp-action="Register" class="btn btn-primary mb-2">Neue Erstellen(Register)</a>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-success mb-2">Hinzufügen</a>
             <table class="table table-bordered table-sm">
-                <thead><tr><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+                <thead><tr><th>Email</th><th>Rolle</th><th>Action</th></tr></thead>
                 <tbody>
                     @foreach (var user in Model.Users)
                     {
@@ -75,7 +75,7 @@
                             </td>
                             <td>
                                 <form asp-action="ToggleAdmin" asp-route-id="@user.Id" method="post">
-                                    <button class="btn btn-sm btn-outline-dark">Role ändern</button>
+                                    <button class="btn btn-sm btn-outline-dark">Rolle ändern</button>
                                 </form>
                             </td>
                             <td>
@@ -117,4 +117,21 @@
             </table>
         </div>
     </div>
+    <hr />
+    <h3>Alle Information (Many-to-Many)</h3>
+    <table class="table table-dark">
+        <thead>
+            <tr><th>User</th><th>Gekauft</th><th>Datum</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.AllPurchases)
+            {
+                <tr>
+                    <td>@item.Person.Email</td>
+                    <td>@item.Game.SpielName</td>
+                    <td>@item.PurchaseDate</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>

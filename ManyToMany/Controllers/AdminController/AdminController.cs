@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ManyToMany.Controllers
 {
-    [Authorize(Roles = "Admin")] // Доступ только админам
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly ApplicationDBContext _context;
@@ -22,10 +22,10 @@ namespace ManyToMany.Controllers
             _roleManager = roleManager;
         }
 
-        // --- ГЛАВНАЯ СТРАНИЦА АДМИНА ---
+        // admin
         public async Task<IActionResult> Index()
         {
-            // Подгружаем данные для статистики M:N
+          
             var userGames = await _context.UserGames.Include(ug => ug.Game).Include(ug => ug.Person).ToListAsync();
 
             var model = new AdminDashboardViewModel
@@ -34,27 +34,57 @@ namespace ManyToMany.Controllers
                 Games = await _context.Games.Include(g => g.Genres).ToListAsync(),
                 Genres = await _context.Genres.ToListAsync(),
 
-                // Считаем статистику (M:N во всей красе)
                 GamesPopularity = userGames.GroupBy(x => x.Game.SpielName)
                                            .ToDictionary(g => g.Key, g => g.Count()),
 
                 UsersActivity = userGames.GroupBy(x => x.Person.Email)
-                                         .ToDictionary(g => g.Key, g => g.Count())
+                                         .ToDictionary(g => g.Key, g => g.Count()),
+                AllPurchases = await _context.UserGames
+                    .Include(ug => ug.Person)
+                    .Include(ug => ug.Game)
+                    .OrderByDescending(ug => ug.PurchaseDate)
+                    .ToListAsync()
             };
 
             return View(model);
         }
 
-        // --- УПРАВЛЕНИЕ ИГРАМИ ---
+        //Manage Gmes
+
 
         [HttpGet]
-        public IActionResult CreateGame() => View();
+        public async Task<IActionResult> CreateGame()
+        {
+           var model = new CreateEditViewModel
+            {
+               Game = new Game(),
+               Genres = await _context.Genres.ToListAsync()
+            };
+            return View(model);
+        }
+
 
         [HttpPost]
-        public async Task<IActionResult> CreateGame(Game game)
+        public async Task<IActionResult> CreateGame(Game game, int[] selectedGenreIds)
         {
+            // Notmapped GenreID
+            if (selectedGenreIds != null && selectedGenreIds.Length > 0)
+            {
+                game.Genres = new List<Genre>();
+                foreach (var id in selectedGenreIds)
+                {
+                    var genre = await _context.Genres.FindAsync(id);
+                    if (genre != null)
+                    {
+                        game.Genres.Add(genre);
+                    }
+                }
+            }
+
+          
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
+
             return RedirectToAction("Index");
         }
 
@@ -62,7 +92,13 @@ namespace ManyToMany.Controllers
         public async Task<IActionResult> EditGame(int id)
         {
             var game = await _context.Games.FindAsync(id);
-            return View(game);
+            var genres = await _context.Genres.ToListAsync();
+            var model = new CreateEditViewModel
+            {
+                Genres = genres,
+                Game = game
+            };
+            return View(model);
         }
 
         [HttpPost]
@@ -85,9 +121,8 @@ namespace ManyToMany.Controllers
             return RedirectToAction("Index");
         }
 
-        // --- УПРАВЛЕНИЕ ЖАНРАМИ ---
-
-        [HttpPost] // Быстрое создание жанра прямо с главной (сделаем форму в Index)
+        //Manage Genre
+        [HttpPost]
         public async Task<IActionResult> CreateGenre(string genreName)
         {
             if (!string.IsNullOrEmpty(genreName))
@@ -110,7 +145,7 @@ namespace ManyToMany.Controllers
             return RedirectToAction("Index");
         }
 
-        // --- УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ ---
+        // manage Users
 
         [HttpPost]
         public async Task<IActionResult> DeleteUser(string id)
@@ -123,7 +158,7 @@ namespace ManyToMany.Controllers
             return RedirectToAction("Index");
         }
 
-        // Назначить Админом (или снять)
+        
         [HttpPost]
         public async Task<IActionResult> ToggleAdmin(string id)
         {

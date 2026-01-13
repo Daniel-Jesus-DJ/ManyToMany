@@ -1,19 +1,19 @@
 ﻿@{
-    ViewData["Title"] = "Регистрация";
+    ViewData["Title"] = "Registrieren";
 }
 
-<h2>Регистрация</h2>
+<h2>Registrieren</h2>
 
 <form asp-action="Register" method="post">
     <div asp-validation-summary="All" class="text-danger"></div>
 
     <div class="mb-3">
-        <label>Имя</label>
+        <label>Name</label>
         <input name="firstName" class="form-control" required />
     </div>
 
     <div class="mb-3">
-        <label>Фамилия</label>
+        <label>Nachname</label>
         <input name="name" class="form-control" required />
     </div>
 
@@ -37,5 +37,5 @@
         <select name="geschlecht" class="form-control" asp-items="Html.GetEnumSelectList<ManyToMany.Core.Models.Geschlecht>()"></select>
     </div>
 
-    <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+    <button type="submit" class="btn btn-primary">Registrieren</button>
 </form>
