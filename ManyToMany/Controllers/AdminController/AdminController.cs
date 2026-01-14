@@ -102,10 +102,33 @@ namespace ManyToMany.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditGame(Game game)
+        public async Task<IActionResult> EditGame(Game game, int[] selectedGenreIds)
         {
-            _context.Games.Update(game);
-            await _context.SaveChangesAsync();
+            var currentGame = await _context.Games
+                .Include(g => g.Genres)
+                .FirstOrDefaultAsync(g => g.GameID == game.GameID);
+            if (currentGame != null)
+                {
+                currentGame.SpielName = game.SpielName;
+                currentGame.ErscheingungsJahr = game.ErscheingungsJahr;
+                currentGame.SinglePlayer = game.SinglePlayer;
+                currentGame.Entwickler = game.Entwickler;
+                // Update Genres
+                currentGame.Genres.Clear();
+                if (selectedGenreIds != null && selectedGenreIds.Length > 0)
+                {
+                    foreach (var id in selectedGenreIds)
+                    {
+                        var genre = await _context.Genres.FindAsync(id);
+                        if (genre !=null)
+                        {
+
+                        currentGame.Genres.Add(genre);
+                        }
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
             return RedirectToAction("Index");
         }
 
