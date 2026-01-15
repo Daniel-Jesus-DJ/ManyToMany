@@ -5,7 +5,7 @@ namespace ManyToMany.ViewModels
     public class ShopViewModel
     {
         public List<Game> AllGames { get; set; }      //game to schow
-        public List<UserGame> MyGames { get; set; }   //for games in Korb
+        public List<UserGame> UsersGames { get; set; }    //users with games to WarenKorb
         public string SearchString { get; set; } = string.Empty;
     }
 }

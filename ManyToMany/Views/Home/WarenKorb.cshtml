@@ -1,0 +1,76 @@
+﻿@model List<UserGame> 
+@{
+	ViewData["Title"] = "Warenkorb";
+}
+
+<div class="col-md-9">
+	<div class="card shadow-sm sticky-top" style="top: 20px;">
+		<div class="card-header bg-success text-white">
+			<h5 class="mb-0">Meine Game Liste </h5>
+		</div>
+		<div class="card-body p-0">
+			@if (User.Identity.IsAuthenticated)
+			{
+				@if (Model.Any())
+				{
+					<ul class="list-group list-group-flush">
+						@foreach (var item in Model)
+						{
+							<li class="list-group-item d-flex justify-content-between align-items-center">
+								<div>
+									<strong>@item.SnapShotSpielName</strong><br />
+									<span class="text-muted">@item.SnapShotEntwickler</span><br />
+									@foreach (var genre in item.SnapShotGenres.Split(","))
+									{
+										<span class="badge bg-secondary">@genre</span>
+									}
+
+									<small class="text-muted">@item.PurchaseDate.ToShortDateString()</small>
+								</div>
+
+								<form asp-action="ReturnGame" asp-controller="Home" method="post"
+									  onsubmit="return confirm('Das Game wird gelöscht');">
+
+									<input type="hidden" name="gameId" value="@item.GameId" />
+
+									<button type="submit" class="btn btn-sm btn-outline-danger" title="Gib das züruck">
+										&times;
+									</button>
+								</form>
+
+								<form asp-action="TransferGame" method="post"
+									  onsubmit="return confirm('Das Game wird übetragen zu Gamer ')">
+									<input type="hidden" name="gameId" value="@item.GameId" />
+									<div  >
+										<label for="receiverEmail" class="visually-hidden">Empfänger E-Mail</label>
+										<input type="email" name="receiverEmail" class="form-control" placeholder="E-mail wem Sie schicken wollen" required />
+										<button type="submit" class="btn btn-sm btn-outline-primary" title="Spiel übertragen">
+											Game übertragen 🎁
+										</button>
+									</div>
+								
+								</form>
+
+
+							</li>
+						}
+					</ul>
+				}
+				else
+				{
+					<div class="p-3 text-center text-muted">
+						Noch keine Spiele gekauft.
+					</div>
+				}
+			}
+			else
+			{
+				<div class="p-3 text-center">
+					<p>Bitte melden Sie sich an, um Ihre Spiele zu sehen.</p>
+					<a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-outline-primary">Anmelden</a>
+				</div>
+			}
+		</div>
+	</div>
+</div>
+
