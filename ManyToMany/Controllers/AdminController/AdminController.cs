@@ -25,29 +25,48 @@ namespace ManyToMany.Controllers
         // admin
         public async Task<IActionResult> Index()
         {
-          
-            var userGames = await _context.UserGames.Include(ug => ug.Game).Include(ug => ug.Person).ToListAsync();
+            var userGames = await _context.UserGames
+                .Include(ug => ug.Game)
+                .Include(ug => ug.Person)
+                .ToListAsync();
 
             var model = new AdminDashboardViewModel
             {
-                Users = await _userManager.Users.ToListAsync(),
+                Users = await _context.Users.ToListAsync(),
                 Games = await _context.Games.Include(g => g.Genres).ToListAsync(),
                 Genres = await _context.Genres.ToListAsync(),
-
-                GamesPopularity = userGames.GroupBy(x => x.Game.SpielName)
-                                           .ToDictionary(g => g.Key, g => g.Count()),
-
-                UsersActivity = userGames.GroupBy(x => x.Person.Email)
-                                         .ToDictionary(g => g.Key, g => g.Count()),
-                AllPurchases = await _context.UserGames
-                    .Include(ug => ug.Person)
-                    .Include(ug => ug.Game)
+                AllPurchases = userGames
                     .OrderByDescending(ug => ug.PurchaseDate)
-                    .ToListAsync()
+                    .ToList()
             };
+
+            var gameCounts = userGames
+                .GroupBy(ug => ug.Game.SpielName)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            var userCounts = userGames
+                .GroupBy(ug => ug.Person.Email)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            model.GamesPopularity = model.Games
+                .ToDictionary(
+                    g => g.SpielName,
+                    g => gameCounts.TryGetValue(g.SpielName, out var count) ? count : 0
+                )
+                .OrderByDescending(x => x.Value)
+                .ToDictionary(x => x.Key, x => x.Value);
+
+            model.UsersActivity = model.Users
+                .ToDictionary(
+                    u => u.Email,
+                    u => userCounts.TryGetValue(u.Email, out var count) ? count : 0
+                )
+                .OrderByDescending(x => x.Value)
+                .ToDictionary(x => x.Key, x => x.Value);
 
             return View(model);
         }
+
 
         //Manage Gmes
 
