@@ -23,7 +23,7 @@ namespace ManyToMany.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(string email, string password, string name, string firstName, DateOnly alter, Geschlecht geschlecht)
+        public async Task<IActionResult> Register(string email, string password, string name, string firstName, DateOnly alter, Geschlecht geschlecht, int status)
         {
             // Создаем пользователя вручную
             var user = new Person
@@ -33,7 +33,8 @@ namespace ManyToMany.Controllers
                 Name = name,
                 FirstName = firstName,
                 Alter = alter,
-                Geschlecht = geschlecht
+                Geschlecht = geschlecht,
+                Status = 1
             };
 
             // Identity сама захэширует пароль и сохранит в БД

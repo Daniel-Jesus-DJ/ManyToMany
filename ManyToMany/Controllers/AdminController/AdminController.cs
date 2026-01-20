@@ -190,17 +190,29 @@ namespace ManyToMany.Controllers
         // manage Users
 
         [HttpPost]
-        public async Task<IActionResult> DeleteUser(string id)
+        public async Task<IActionResult> DeactivateUser(string id)
         {
             var user = await _userManager.FindByIdAsync(id);
-            if (user != null)
+            if (user.Status == 0)
             {
-                await _userManager.DeleteAsync(user);
+                user.Status = 1;
             }
+            await _userManager.UpdateAsync(user);
             return RedirectToAction("Index");
         }
 
-        
+        [HttpPost]
+        public async Task<IActionResult> ActivateUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user.Status == 1)
+            {
+                user.Status = 0;
+            }
+            await _userManager.UpdateAsync(user);
+            return RedirectToAction("Index");
+        }
+
         [HttpPost]
         public async Task<IActionResult> ToggleAdmin(string id)
         {

@@ -12,6 +12,7 @@ namespace ManyToMany.Core.Models
         public string FirstName { get; set; }
         public Geschlecht Geschlecht { get; set; }
         public DateOnly Alter { get; set; }
+        public int Status { get; set; } = 0;
           
         public ICollection<UserGame> UserGames { get; set; }
 
