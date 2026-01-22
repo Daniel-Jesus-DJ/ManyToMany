@@ -1,145 +1,229 @@
 ﻿@model AdminDashboardViewModel
 
 @{
-    ViewData["Title"] = "Admin Dashboard";
+	ViewData["Title"] = "Admin Dashboard";
 }
 
 <div class="container-fluid">
-    <h1 class="mb-4">Admin Panel</h1>
+	<h1 class="mb-4">Admin Panel</h1>
 
-    <div class="row">
-        <div class="col-md-12 mb-4">
-            <div class="card bg-light">
-                <div class="card-header"> Many-to-Many</div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Top Games (Game -> Users)</h5>
-                            <ol type="1">
-                                @foreach (var item in Model.GamesPopularity.OrderByDescending(x => x.Value))
-                                {
-                                    <li> <b>@item.Key</b> : @item.Value mal gekauft</li>
-                                }
-                            </ol>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Users Activity(User -> Games)</h5>
-                            <ol type="1">
-                                @foreach (var item in Model.UsersActivity.OrderByDescending(x => x.Value))
-                                {
-                                    <li> <b>@item.Key</b> hat : @item.Value Game(s) gekauft</li>
-                                }
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+	<div class="row">
+		<div class="col-md-12 mb-4">
+			<div class="card bg-light">
+				<div class="card-header"> Many-to-Many</div>
+				<div class="card-body">
+					<div class="row">
+						<div class="col-md-6">
+							<h5>Top Games (Game -> Users)</h5>
+							<ol type="1">
+								@foreach (var item in Model.GamesPopularity.OrderByDescending(x => x.Value))
+								{
+									<li> <b>@item.Key</b> : @item.Value mal gekauft</li>
+								}
+							</ol>
+						</div>
+						<div class="col-md-6">
+							<h5>Users Activity(User -> Games)</h5>
+							<ol type="1">
+								@foreach (var item in Model.UsersActivity.OrderByDescending(x => x.Value))
+								{
+									<li> <b>@item.Key</b> hat : @item.Value Game(s) gekauft</li>
+								}
+							</ol>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <h3>🎮 Game</h3>
-            <a asp-action="CreateGame" class="btn btn-success mb-2">Hinzufügen</a>
-            <table class="table table-bordered table-sm">
-                <thead><tr><th>Name</th><th>Actions</th></tr></thead>
-                <tbody>
-                    @foreach (var game in Model.Games)
-                    {
-                        <tr>
-                            <td>@game.SpielName</td>
-                            <td>
-                                <a asp-action="EditGame" asp-route-id="@game.GameID" class="btn btn-warning btn-sm">Edit</a>
-                                <form asp-action="DeleteGame" asp-route-id="@game.GameID" method="post" style="display:inline;">
-                                    <button class="btn btn-danger btn-sm">X</button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+	<div class="row">
+		<div class="col-md-6">
+			<h3>🎮 Game</h3>
+			<a asp-action="CreateGame" class="btn btn-success mb-2">Hinzufügen</a>
+			<table class="table table-bordered table-sm">
+				<thead><tr><th>Name</th><th>Actions</th></tr></thead>
+				<tbody>
+					@foreach (var game in Model.Games)
+					{
+					
+						@if (game.IsDeleted)
+						{
+						
+							<tr class="table-secondary text-muted">
+								<td>
+									@game.SpielName <span class="badge bg-danger">Deleted</span>
+								</td>
+								<td>
+									<form asp-action="RestoreGame" asp-route-id="@game.GameID" method="post" style="display:inline;">
+										<button class="btn btn-success btn-sm">♻️ Wiederherstellen</button>
+									</form>
+								</td>
+							</tr>
+						}
+						else
+						{
+						
+							<tr>
+								<td>@game.SpielName</td>
+								<td>
+									<a asp-action="EditGame" asp-route-id="@game.GameID" class="btn btn-warning btn-sm">Edit</a>
 
-        <div class="col-md-6">
-            <h3>👤 Users</h3>
-            <a asp-controller="Account" asp-action="Register" class="btn btn-success mb-2">Hinzufügen</a>
-            <table class="table table-bordered table-sm">
-                <thead><tr><th>Email</th><th>Rolle</th>
-                <tbody>
-                    @foreach (var user in Model.Users)
-                    {
-                        <tr class="@(user.Status == 1 ? "table-secondary" : "")">
-                            <td>
-                                @user.Email <br />
-                                <small class="text-muted">@user.FirstName @user.Name</small>
-                            </td>
-                            <td>
-                                <form asp-action="ToggleAdmin" asp-route-id="@user.Id" method="post">
-                                    <button class="btn btn-sm btn-outline-dark">Rolle ändern</button>
-                                </form>
-                            </td>
-                            <td>
-                                <form asp-action="ActivateUser" asp-route-id="@user.Id" method="post">
-                                    <button class="btn btn-success btn-sm" >Aktivieren</button>
-                                </form>
-                            </td>
-                            <td>
-                                <form asp-action="DeactivateUser" asp-route-id="@user.Id" method="post">
-                                    <button class="btn btn-danger btn-sm @(user.Status == 1 ? "disabled" : "")">Deaktivieren</button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
+									<form asp-action="DeleteGame" asp-route-id="@game.GameID" method="post" style="display:inline;">
+										<button class="btn btn-danger btn-sm">X</button>
+									</form>
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		</div>
 
-    <hr />
+		<div class="col-md-6">
+			<h3>👤 Users</h3>
+			<a asp-controller="Account" asp-action="Register" class="btn btn-success mb-2">Hinzufügen</a>
+			<table class="table table-bordered table-sm">
+				<thead><tr>
+					<th>Email</th>
+					<th>Rolle</th>
+					<th>Action</th>
+					<th colspan="2">Status</th>
+					</tr></thead>
+				<tbody>
+					@foreach (var user in Model.Users)
+					{ 
+						@if(user.FirstName != "Super")
+						{
+							<tr class="@(user.Status == 1 ? "table-secondary" : "")">
+								<td>
+									@user.Email <br />
+									<small class="text-muted">@user.FirstName @user.Name</small>
+								</td>
+								<td>
+									@{
+										var userRoles = Model.UsersWithRoles.FirstOrDefault(x => x.UserId == user.Id)?.RoleName;
+										if (userRoles != null && userRoles.Any())
+										{
+											@string.Join(", ", userRoles)
 
-    <div class="row">
-        <div class="col-md-6">
-            <h3>🏷️ Genre</h3>
-            <form asp-action="CreateGenre" method="post" class="d-flex mb-2">
-                <input type="text" name="genreName" class="form-control me-2" placeholder="Neue Genre..." required />
-                <button class="btn btn-success">Hinzufügen</button>
-            </form>
+										}
+									}
+								</td>
 
-            <table class="table table-bordered table-sm">
-                <tbody>
-                    @foreach (var genre in Model.Genres)
-                    {
-                        <tr>
-                            <td>@genre.GenreName</td>
-                            <td>
-                                <form asp-action="DeleteGenre" asp-route-id="@genre.Id" method="post">
-                                    <button class="btn btn-danger btn-sm">X</button>
-                                </form>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <hr />
-    <h3>Alle Information (Many-to-Many)</h3>
-    <table class="table table-dark">
-        <thead>
-            <tr><th>User</th><th>Gekauft</th><th>Datum</th></tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model.AllPurchases)
-            {
-                <tr>
-                    <td>@item.Person.Email</td>
-                    <td>@item.Game.SpielName</td>
-                    <td>@item.PurchaseDate</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-    <style>
+								<td>
 
-    </style>
+									<form asp-action="ToggleAdmin" asp-route-id="@user.Id" method="post">
+										<button class="btn btn-sm btn-outline-dark">Rolle ändern</button>
+									</form>
+
+
+								</td>
+
+								<td>
+									<form asp-action="ActivateUser" asp-route-id="@user.Id" method="post">
+										<button class="btn btn-success btn-sm">Aktivieren</button>
+									</form>
+								</td>
+								<td>
+									<form asp-action="DeactivateUser" asp-route-id="@user.Id" method="post">
+										<button class="btn btn-danger btn-sm @(user.Status == 1 ? "disabled" : "")">Deaktivieren</button>
+									</form>
+								</td>
+
+							</tr>
+						}
+						
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<hr />
+
+	<div class="row">
+		<div class="col-md-6">
+			<h3>🏷️ Genre</h3>
+			<form asp-action="CreateGenre" method="post" class="d-flex mb-2">
+				<input type="text" name="genreName" class="form-control me-2" placeholder="Neue Genre..." required />
+				<button class="btn btn-success">Hinzufügen</button>
+			</form>
+
+			<table class="table table-bordered table-sm">
+				<tbody>
+					@foreach (var genre in Model.Genres)
+					{
+						<tr>
+							<td>@genre.GenreName</td>
+							<td>
+								<form asp-action="DeleteGenre" asp-route-id="@genre.Id" method="post">
+									<button class="btn btn-danger btn-sm">X</button>
+								</form>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+
+
+		<div class="col-md-6">
+			<h3>🏷️ Gift history</h3>
+
+
+			<table class="table table-bordered table-sm">
+
+				<tbody>
+					<tr>
+						<th>Absender name</th>
+						<th>Empfänger name</th>
+						<th>Game name</th>
+						<th>Data</th>
+					</tr>
+					@if (Model.GiftHistory.Any() == null || !Model.GiftHistory.Any())
+					{
+						<tr>
+							<td rowspan="4">kein geschenk </td>
+						</tr>
+					}
+					else
+					{
+						@foreach (var history in Model.GiftHistory)
+						{
+							<tr>
+								<td>@history.SenderName</td>
+								<td>@history.RevieverName</td>
+								<td>@history.GameName</td>
+								<td>@history.SendingDate</td>
+							</tr>
+
+						}
+					}
+
+				</tbody>
+			</table>
+		</div>
+	</div>
+
+	<hr />
+	<h3>Alle Information (Many-to-Many)</h3>
+	<table class="table table-dark">
+		<thead>
+			<tr><th>User</th><th>Gekauft</th><th>Datum</th></tr>
+		</thead>
+		<tbody>
+			@foreach (var item in Model.AllPurchases)
+			{
+				<tr>
+					<td>@item.Person.Email</td>
+					<td>@item.Game.SpielName</td>
+					<td>@item.PurchaseDate</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+	<style>
+
+	</style>
 </div>

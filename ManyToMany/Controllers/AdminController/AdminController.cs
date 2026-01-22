@@ -4,6 +4,7 @@ using ManyToMany.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.EntityFrameworkCore;
 
 namespace ManyToMany.Controllers
@@ -22,22 +23,45 @@ namespace ManyToMany.Controllers
             _roleManager = roleManager;
         }
 
-        // admin
+   
+
         public async Task<IActionResult> Index()
         {
             var userGames = await _context.UserGames
                 .Include(ug => ug.Game)
                 .Include(ug => ug.Person)
                 .ToListAsync();
+            var users = await _userManager.Users.ToListAsync();
+            var userWithRoles = new List<UserWithRoles>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+
+                userWithRoles.Add(new UserWithRoles
+                {
+                    UserId = user.Id,
+                    RoleName = roles
+                });
+            }
+    
+
+            var games = await _context.Games.Include(g => g.Genres).ToListAsync();
+            var genres = await _context.Genres.ToListAsync();
+            var giftHistory = await _context.GiftHistories.ToListAsync();
+
+            var allPurchases = userGames
+                .OrderByDescending(ug => ug.PurchaseDate)
+                .ToList();
 
             var model = new AdminDashboardViewModel
             {
-                Users = await _context.Users.ToListAsync(),
-                Games = await _context.Games.Include(g => g.Genres).ToListAsync(),
-                Genres = await _context.Genres.ToListAsync(),
-                AllPurchases = userGames
-                    .OrderByDescending(ug => ug.PurchaseDate)
-                    .ToList()
+                UsersWithRoles = userWithRoles,
+                Users = users,
+                Games = games,
+                Genres = genres,
+                AllPurchases = allPurchases,
+                GiftHistory = giftHistory,
             };
 
             var gameCounts = userGames
@@ -68,7 +92,7 @@ namespace ManyToMany.Controllers
         }
 
 
-        //Manage Gmes
+        //Manage Games
 
 
         [HttpGet]
@@ -157,11 +181,30 @@ namespace ManyToMany.Controllers
             var game = await _context.Games.FindAsync(id);
             if (game != null)
             {
-                _context.Games.Remove(game);
+                game.IsDeleted = true;
                 await _context.SaveChangesAsync();
             }
+            else
+            {
+                return View("Game schon wurd gelöscht");
+            }
+
+                return RedirectToAction("Index");
+        }
+        [HttpPost]
+        public async Task<IActionResult> RestoreGame(int id)
+        {
+            var game = await _context.Games.FindAsync(id);
+            if (game != null)
+            {
+                game.IsDeleted = false;
+                await _context.SaveChangesAsync();
+            }
+          
+
             return RedirectToAction("Index");
         }
+
 
         //Manage Genre
         [HttpPost]

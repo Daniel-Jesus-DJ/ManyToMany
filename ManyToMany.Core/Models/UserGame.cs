@@ -1,10 +1,12 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace ManyToMany.Core.Models
 {
     public class UserGame
     {
-     
+        [Key]
+        public int GameLicenceId { get; set; }
         public string PersonId { get; set; }
         public Person Person { get; set; }
 
@@ -12,9 +14,9 @@ namespace ManyToMany.Core.Models
         public int GameId { get; set; }
         public Game Game { get; set; }
 
-        public string SnapShotSpielName{ get; set; } = string.Empty;
-        public string SnapShotEntwickler { get; set; } = string.Empty;
-        public string SnapShotGenres { get; set; } = string.Empty;
+        public string SpielName{ get; set; } = string.Empty;
+        public string Entwickler { get; set; } = string.Empty;
+        public string Genres { get; set; } = string.Empty;
 
 
         public DateTime PurchaseDate { get; set; } = DateTime.Now;

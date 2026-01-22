@@ -18,9 +18,9 @@
 						{
 							<li class="list-group-item d-flex justify-content-between align-items-center">
 								<div>
-									<strong>@item.SnapShotSpielName</strong><br />
-									<span class="text-muted">@item.SnapShotEntwickler</span><br />
-									@foreach (var genre in item.SnapShotGenres.Split(","))
+									<strong>@item.SpielName</strong><br />
+									<span class="text-muted">@item.Entwickler</span><br />
+									@foreach (var genre in item.Genres.Split(","))
 									{
 										<span class="badge bg-secondary">@genre</span>
 									}

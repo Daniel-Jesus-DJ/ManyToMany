@@ -23,7 +23,7 @@ namespace ManyToMany.Controllers
         public async Task<IActionResult> Index(string searchString)
         {
 
-            var gamesQuery = _context.Games
+            var gamesQuery = _context.Games.Where(g =>g.IsDeleted == false)
                                      .Include(g => g.Genres)
                                      .AsQueryable();
 
@@ -33,13 +33,17 @@ namespace ManyToMany.Controllers
                                                 || g.Genres.Any(gen => gen.GenreName.Contains(searchString)));
             }
             var usersGames = new List<UserGame>();
+
             if (User.Identity.IsAuthenticated)
             {
                 var user = await _userManager.GetUserAsync(User);
-                usersGames = await _context.UserGames
-                                           .Where(ug => ug.PersonId == user.Id)
-                                           .ToListAsync();
+                usersGames = await _context.UserGames.Include(ug => ug.Game)
+                                           .Where(ug => ug.PersonId == user.Id).ToListAsync();
             }
+           
+            
+              
+            
 
             var model = new ShopViewModel
             {
@@ -69,7 +73,7 @@ namespace ManyToMany.Controllers
             }
             else
             {
-                TempData["Error"] = "Ошибка: Игра не найдена в вашей библиотеке.";
+                TempData["Error"] = "Fehler. Spiel ist nicht gefunden";
             }
 
             return RedirectToAction("Index");
@@ -98,9 +102,9 @@ namespace ManyToMany.Controllers
                 PersonId = user.Id,
                 GameId = gameId,
                 PurchaseDate = DateTime.Now,
-                SnapShotSpielName = gameFromDB.SpielName,
-                SnapShotEntwickler = gameFromDB.Entwickler,
-                SnapShotGenres = string.Join(", ", gameFromDB.Genres.Select(g => g.GenreName))
+                SpielName = gameFromDB.SpielName,
+                Entwickler = gameFromDB.Entwickler,
+                Genres = string.Join(", ", gameFromDB.Genres.Select(g => g.GenreName))
             };
 
             _context.UserGames.Add(purchase);
@@ -113,13 +117,25 @@ namespace ManyToMany.Controllers
         public async Task<IActionResult> WarenKorb()
         {
             var user = await _userManager.GetUserAsync(User);
-            var users = await _context.Users.ToListAsync();
             var purchases = await _context.UserGames
        .Where(ug => ug.PersonId == user.Id)
        .ToListAsync();
 
 
             return View(purchases);
+        }
+        public async Task TransferHistoryAsync(string gameName, string senderName, string recieverName)
+        {
+            var giftHistory = new GiftHistory
+            {
+                GameName = gameName,
+                SenderName = senderName,
+                RevieverName = recieverName,
+                SendingDate = DateTime.Now
+               
+            };
+            await _context.AddAsync(giftHistory);
+            await _context.SaveChangesAsync();
         }
         [Authorize]
         [HttpPost]
@@ -147,19 +163,15 @@ namespace ManyToMany.Controllers
                 TempData["Message"] = "Der Empfänger besitzt dieses Spiel bereits.";
                 return RedirectToAction("Index");
             }
-            var newPuschase = new UserGame()
+            else
             {
-                PersonId = receiver.Id,
-                GameId = gameID,
-                PurchaseDate = sendersPurchase.PurchaseDate,
-                SnapShotSpielName = sendersPurchase.SnapShotSpielName,
-                SnapShotEntwickler = sendersPurchase.SnapShotEntwickler,
-                SnapShotGenres = sendersPurchase.SnapShotGenres
-            };
-            await _context.UserGames.AddAsync(newPuschase);
-            _context.UserGames.Remove(sendersPurchase);
+                sendersPurchase.PersonId = receiver.Id;
+            }
+            _context.UserGames.Update(sendersPurchase); 
             await _context.SaveChangesAsync();
              TempData["Message"] = $"Spiel erfolgreich übertragen zu spiler {receiver.FirstName}";
+
+            await TransferHistoryAsync(sendersPurchase.SpielName, sender.FirstName, receiver.FirstName);
 
             return RedirectToAction("Index");
         }
