@@ -36,9 +36,9 @@ namespace ManyToMany.Core.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder); 
-                      
-          
+            base.OnModelCreating(modelBuilder);
+
+         
             modelBuilder.Entity<UserGame>()
                 .HasOne(ug => ug.Person)
                 .WithMany(p => p.UserGames)
