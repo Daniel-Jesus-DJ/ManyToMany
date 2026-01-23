@@ -146,7 +146,7 @@
 		<div class="col-md-6">
 			<h3>🏷️ Genre</h3>
 			<form asp-action="CreateGenre" method="post" class="d-flex mb-2">
-				<input type="text" name="genreName" class="form-control me-2" placeholder="Neue Genre..." required />
+				<input type="text" name="genreName" class="form-control me-2" placeholder="Neues Genre..." required />
 				<button class="btn btn-success">Hinzufügen</button>
 			</form>
 
@@ -176,9 +176,9 @@
 
 				<tbody>
 					<tr>
-						<th>Absender name</th>
-						<th>Empfänger name</th>
-						<th>Game name</th>
+						<th>Absender Name</th>
+						<th>Empfänger Name</th>
+						<th>Game Name</th>
 						<th>Data</th>
 					</tr>
 					@if (Model.GiftHistory.Any() == null || !Model.GiftHistory.Any())

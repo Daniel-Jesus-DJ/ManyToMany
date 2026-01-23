@@ -4,7 +4,7 @@
 }
 
 <div class="col-md-9">
-	<div class="card shadow-sm sticky-top" style="top: 20px;">
+	<div class="card shadow-sm sticky-top" style="top: 20px;width: 1296px">
 		<div class="card-header bg-success text-white">
 			<h5 class="mb-0">Meine Game Liste </h5>
 		</div>
@@ -13,11 +13,11 @@
 			{
 				@if (Model.Any())
 				{
-					<ul class="list-group list-group-flush">
+						<ul class="list-group list-group-flush" style="width: 1296px">
 						@foreach (var item in Model)
 						{
 							<li class="list-group-item d-flex justify-content-between align-items-center">
-								<div>
+								<div style="width: 400px;text-align: left">
 									<strong>@item.SpielName</strong><br />
 									<span class="text-muted">@item.Entwickler</span><br />
 									@foreach (var genre in item.Genres.Split(","))
@@ -41,10 +41,9 @@
 								<form asp-action="TransferGame" method="post"
 									  onsubmit="return confirm('Das Game wird übetragen zu Gamer ')">
 									<input type="hidden" name="gameId" value="@item.GameId" />
-									<div  >
-										<label for="receiverEmail" class="visually-hidden">Empfänger E-Mail</label>
-										<input type="email" name="receiverEmail" class="form-control" placeholder="E-mail wem Sie schicken wollen" required />
-										<button type="submit" class="btn btn-sm btn-outline-primary" title="Spiel übertragen">
+									<div style="text-align: right">
+										<input type="email" name="receiverEmail" class="form-control" placeholder="Empfänger E-Mail" required />
+										<button type="submit" class="btn btn-sm btn-outline-primary" title="Spiel übertragen" style="margin-top: 15px">
 											Game übertragen 🎁
 										</button>
 									</div>

@@ -8,7 +8,7 @@ namespace ManyToMany.Core.Models
 {
     public enum Geschlecht
     {
-        Female,
-        Male
+        Weiblich,
+        Männlich
     }
 }

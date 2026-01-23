@@ -35,7 +35,7 @@ namespace ManyToMany.Service
                     FirstName = "Super",
                     EmailConfirmed = true,
                     Alter = new DateOnly(1990, 1, 1),
-                    Geschlecht = Geschlecht.Male
+                    Geschlecht = Geschlecht.Männlich
                 };
 
                 
