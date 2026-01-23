@@ -4,6 +4,7 @@ using ManyToMany.Core.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ManyToMany.Core.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20260108144056_Identity2")]
+    partial class Identity2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,8 +55,8 @@ namespace ManyToMany.Core.Migrations
                     b.Property<DateOnly>("ErscheingungsJahr")
                         .HasColumnType("date");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<string>("Publisher")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("SinglePlayer")
                         .HasColumnType("bit");
@@ -82,31 +85,6 @@ namespace ManyToMany.Core.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Genres");
-                });
-
-            modelBuilder.Entity("ManyToMany.Core.Models.GiftHistory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("GameName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RevieverName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SenderName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("SendingDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GiftHistories");
                 });
 
             modelBuilder.Entity("ManyToMany.Core.Models.Person", b =>
@@ -168,9 +146,6 @@ namespace ManyToMany.Core.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
@@ -193,39 +168,18 @@ namespace ManyToMany.Core.Migrations
 
             modelBuilder.Entity("ManyToMany.Core.Models.UserGame", b =>
                 {
-                    b.Property<int>("GameLicenceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GameLicenceId"));
-
-                    b.Property<string>("Entwickler")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("PersonId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Genres")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PersonId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime>("PurchaseDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("SpielName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("GameLicenceId");
+                    b.HasKey("PersonId", "GameId");
 
                     b.HasIndex("GameId");
-
-                    b.HasIndex("PersonId");
 
                     b.ToTable("UserGames");
                 });

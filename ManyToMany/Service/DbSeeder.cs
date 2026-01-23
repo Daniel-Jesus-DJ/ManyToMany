@@ -35,10 +35,10 @@ namespace ManyToMany.Service
                     FirstName = "Super",
                     EmailConfirmed = true,
                     Alter = new DateOnly(1990, 1, 1),
-                    Geschlecht = Geschlecht.Male
+                    Geschlecht = Geschlecht.Männlich
                 };
 
-                // Пароль должен быть сложным (требование Identity)
+                
                 var result = await userManager.CreateAsync(newAdmin, "Admin123!");
 
                 if (result.Succeeded)
@@ -46,6 +46,15 @@ namespace ManyToMany.Service
                     await userManager.AddToRoleAsync(newAdmin, "Admin");
                 }
             }
+            else
+            {
+                //if adminUser lost adminRights
+                if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
+                {
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
+                }
+            }
         }
     }
 }
+

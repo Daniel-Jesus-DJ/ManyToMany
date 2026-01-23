@@ -31,16 +31,14 @@ namespace ManyToMany.Core.Data
 
         public DbSet<Game> Games { get; set; }
         public DbSet<Genre> Genres { get; set; }
-        public DbSet<UserGame> UserGames { get; set; } // Наша таблица покупок
+        public DbSet<UserGame> UserGames { get; set; } 
+        public DbSet<GiftHistory> GiftHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder); // Не удаляй это! Нужно для Identity.
-
-            // Настройка Many-to-Many для Игр и Пользователей через UserGame
-            modelBuilder.Entity<UserGame>()
-                .HasKey(ug => new { ug.PersonId, ug.GameId }); // Составной ключ
-
+            base.OnModelCreating(modelBuilder); 
+                      
+          
             modelBuilder.Entity<UserGame>()
                 .HasOne(ug => ug.Person)
                 .WithMany(p => p.UserGames)
@@ -51,7 +49,7 @@ namespace ManyToMany.Core.Data
                 .WithMany(g => g.UserGames)
                 .HasForeignKey(ug => ug.GameId);
 
-            // Жанры оставляем как было (простая связь)
+          
             modelBuilder.Entity<Genre>()
                 .HasMany(g => g.Games)
                 .WithMany(gm => gm.Genres);

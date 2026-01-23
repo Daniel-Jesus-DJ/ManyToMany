@@ -1,60 +1,131 @@
-﻿@model IEnumerable<Game>
+﻿@model ShopViewModel
 
 @{
-    ViewData["Title"] = "Магазин Игр";
+    ViewData["Title"] = "Game Shop";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Магазин Игр</h1>
+<div class="text-center mb-4">
+    <h1 class="display-4">Game Shop</h1>
     @if (TempData["Message"] != null)
     {
-        <div class="alert alert-info">@TempData["Message"]</div>
+        <div class="alert alert-success">@TempData["Message"]</div>
     }
 </div>
-<div class="row mb-3">
-    <div class="col-md-6 offset-md-3">
-        <form asp-action="Index" method="get" class="d-flex">
-            <input type="text" name="searchString" class="form-control me-2"
-                   value="@ViewData["CurrentFilter"]"
-                   placeholder="Поиск по названию или жанру..." />
-            <button type="submit" class="btn btn-outline-primary">Найти</button>
-            <a asp-action="Index" class="btn btn-outline-secondary ms-2">Сбросить</a>
-        </form>
-    </div>
-</div>
 
-<div class="row mt-4">
-    @foreach (var game in Model)
-    {
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">@game.SpielName</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">@game.Entwickler</h6>
-                    <p class="card-text">
-                        Жанры:
-                        @foreach (var g in game.Genres)
-                        {
-                            <span class="badge bg-secondary">@g.GenreName</span>
-                        }
-                    </p>
-                    <p>Дата выхода: @game.ErscheingungsJahr</p>
-                </div>
-                <div class="card-footer bg-white border-top-0">
-                    <form asp-action="Buy" asp-controller="Home" method="post">
-                        <input type="hidden" name="gameId" value="@game.GameID" />
+<div class="container-fluid">
+    <div class="row">
 
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            <button type="submit" class="btn btn-success w-100">Купить</button>
-                        }
-                        else
-                        {
-                            <button type="submit" class="btn btn-primary w-100">Войти чтобы купить</button>
-                        }
+        <div class="col-md-9">
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <form asp-action="Index" method="get" class="d-flex">
+                        <input type="text" name="searchString" class="form-control me-2"
+                               value="@Model.SearchString"
+                               placeholder="Suche nach Genre oder Spiel..." />
+                        <button type="submit" class="btn btn-primary">Suchen</button>
+                        <a asp-action="Index" class="btn btn-secondary ms-2">Reset</a>
                     </form>
                 </div>
             </div>
+
+            <div class="row">
+                @foreach (var game in Model.AllGames)
+                {
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">@game.SpielName</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">@game.Entwickler</h6>
+                                <p class="card-text">
+                                    Genre:
+                                    @foreach (var g in game.Genres)
+                                    {
+                                        <span class="badge bg-secondary">@g.GenreName</span>
+                                    }
+                                </p>
+                                <p class="card-text"><small class="text-muted">Erscheingungsjahr: @game.ErscheingungsJahr</small></p>
+                            </div>
+                            <div class="card-footer bg-white border-top-0">
+                                <form asp-action="Buy" asp-controller="Home" method="post">
+                                    <input type="hidden" name="gameId" value="@game.GameID" />
+
+                                    @if (User.Identity.IsAuthenticated)
+                                    {
+                                        // chekcing process
+                                        bool isOwned = Model.UsersGames.Any(x => x.GameId == game.GameID);
+
+                                        if (isOwned)
+                                        {
+                                            <button disabled class="btn btn-secondary w-100">Bereits gekauft</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="submit" class="btn btn-success w-100">Kaufen</button>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" class="btn btn-primary w-100">Anmelden zum Kaufen</button>
+                                    }
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
-    }
+
+        <div class="col-md-3">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Meine Game Liste </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        @if (Model.UsersGames.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var item in Model.UsersGames)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@(item.SpielName ?? "wurde gelöscht")</strong>
+                                            <small class="text-muted">@item.PurchaseDate.ToShortDateString()</small>
+                                        </div>
+
+                                        <form asp-action="ReturnGame" asp-controller="Home" method="post"
+                                              onsubmit="return confirm('Das Game wird gelöscht');">
+
+                                            <input type="hidden" name="gameId" value="@item.GameId" />
+
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Gib das züruck">
+                                                &times;
+                                            </button>
+                                        </form>
+
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <div class="p-3 text-center text-muted">
+                                Noch keine Spiele gekauft.
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="p-3 text-center">
+                            <p>Bitte melden Sie sich an, um Ihre Spiele zu sehen.</p>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-sm btn-outline-primary">Anmelden</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>

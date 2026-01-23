@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ManyToMany.Core.Models
 {
-    public enum Geschlecht
+    public class UserWithRoles
     {
-        Weiblich,
-        Männlich
+        public string UserId;
+        public IList<string> RoleName;
     }
 }

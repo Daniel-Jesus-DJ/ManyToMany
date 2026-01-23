@@ -1,0 +1,46 @@
+﻿@model CreateEditViewModel
+
+@{
+    ViewData["Title"] = "Edit Game";
+     var genres = Model.Genres;
+    var game = Model.Game; 
+}
+
+
+
+<h2>Edit Game</h2>
+
+<form asp-action="EditGame" method="post">
+    <input type="hidden"  name="game.GameID" value="@game.GameID" />
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input asp-for="Game.SpielName" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Entwickler</label>
+        <input asp-for="Game.Entwickler" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Genres (Wählen Sie mehrere mit Strg / Ctrl)</label>
+        <select name="selectedGenreIds" class="form-control" multiple style="height: 150px;">
+            @if (genres != null)
+            {
+                foreach (var g in genres)
+                {
+                    <option value="@g.Id">@g.GenreName</option>
+                }
+            }
+        </select>
+        <small class="text-muted">Halten Sie die Taste <b>Strg</b> (Ctrl) gedrückt, um mehrere auszuwählen.</small>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Erscheinungsjahr</label>
+        <input asp-for="Game.ErscheingungsJahr" type="date" class="form-control" />
+    </div>
+
+	<button type="submit" class="btn btn-success">Speichern</button>
+    <a asp-action="Index" class="btn btn-secondary">Abbrechen</a>
+</form>
