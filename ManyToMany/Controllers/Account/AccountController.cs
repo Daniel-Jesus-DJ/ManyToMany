@@ -23,7 +23,7 @@ namespace ManyToMany.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register(string email, string password, string name, string firstName, DateOnly alter, Geschlecht geschlecht, int status)
+        public async Task<IActionResult> Register(string email, string password, string name, string firstName, DateOnly alter, Geschlecht geschlecht, int status, DateTime zuletztOnline)
         {
             // Создаем пользователя вручную
             var user = new Person
@@ -34,7 +34,8 @@ namespace ManyToMany.Controllers
                 FirstName = firstName,
                 Alter = alter,
                 Geschlecht = geschlecht,
-                Status = 1
+                Status = 1,
+                ZuletztOnline = DateTime.Now
             };
 
             // Identity сама захэширует пароль и сохранит в БД
@@ -78,7 +79,7 @@ namespace ManyToMany.Controllers
                     ModelState.AddModelError(string.Empty, "Dieser Nutzer ist deaktiviert, für weitere Informationen, kontaktieren Sie einen Admin.");
                     return View();
                 }
-
+                user.ZuletztOnline = DateTime.Now;
                 return RedirectToAction("Index", "Home");
             }
 

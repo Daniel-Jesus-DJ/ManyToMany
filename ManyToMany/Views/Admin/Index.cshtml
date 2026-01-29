@@ -89,6 +89,7 @@
 					<th>Rolle</th>
 					<th>Action</th>
 					<th colspan="2">Status</th>
+					<th>Zuletzt Online</th>
 					</tr></thead>
 				<tbody>
 					@foreach (var user in Model.Users)
@@ -130,7 +131,9 @@
 										<button class="btn btn-danger btn-sm @(user.Status == 1 ? "disabled" : "")">Deaktivieren</button>
 									</form>
 								</td>
-
+								<td>
+									@user.ZuletztOnline;
+								</td>
 							</tr>
 						}
 						
