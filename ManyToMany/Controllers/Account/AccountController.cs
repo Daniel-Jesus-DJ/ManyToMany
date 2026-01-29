@@ -69,8 +69,16 @@ namespace ManyToMany.Controllers
             // Пытаемся войти
             var result = await _signInManager.PasswordSignInAsync(email, password, isPersistent: false, lockoutOnFailure: false);
 
+            var user = await _userManager.FindByNameAsync(email);
+
             if (result.Succeeded)
             {
+                if (user.Email == email && user.Status == 1)
+                {
+                    ModelState.AddModelError(string.Empty, "Dieser Nutzer ist deaktiviert, für weitere Informationen, kontaktieren Sie einen Admin.");
+                    return View();
+                }
+
                 return RedirectToAction("Index", "Home");
             }
 
