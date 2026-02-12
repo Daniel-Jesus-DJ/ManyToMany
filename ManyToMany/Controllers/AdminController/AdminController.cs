@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace ManyToMany.Controllers
 {
@@ -25,13 +26,13 @@ namespace ManyToMany.Controllers
 
    
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string userId, int? gameId, DateTime? date)
         {
-            var userGames = await _context.UserGames
+            var userGames =  _context.UserGames
                 .Include(ug => ug.Game)
                 .Include(ug => ug.Person)
-                .ToListAsync();
-            var users = await _userManager.Users.ToListAsync();
+                .AsQueryable();
+            var users = await _context.Users.ToListAsync();
             var userWithRoles = new List<UserWithRoles>();
 
             foreach (var user in users)
@@ -44,7 +45,23 @@ namespace ManyToMany.Controllers
                     RoleName = roles
                 });
             }
-    
+            if (!string.IsNullOrEmpty(userId))
+            {
+                userGames = userGames.Where(ug => ug.PersonId == userId);
+            }
+
+       
+            if (gameId.HasValue)
+            {
+                userGames = userGames.Where(ug => ug.GameId == gameId.Value);
+            }
+
+     
+            if (date.HasValue)
+            {
+                userGames = userGames.Where(ug => ug.PurchaseDate.Date == date.Value.Date);
+            }
+
 
             var games = await _context.Games.Include(g => g.Genres).ToListAsync();
             var genres = await _context.Genres.ToListAsync();
@@ -91,7 +108,8 @@ namespace ManyToMany.Controllers
             return View(model);
         }
 
-
+       
+    
         //Manage Games
 
 
