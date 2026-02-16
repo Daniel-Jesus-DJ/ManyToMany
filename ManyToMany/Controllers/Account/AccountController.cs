@@ -35,6 +35,8 @@ namespace ManyToMany.Controllers
                 Alter = alter,
                 Geschlecht = geschlecht,
                 Status = 1,
+                ZuletztOnline = DateTime.Now
+
             };
 
             // Identity сама захэширует пароль и сохранит в БД
@@ -78,9 +80,10 @@ namespace ManyToMany.Controllers
                     ModelState.AddModelError(string.Empty, "Dieser Nutzer ist deaktiviert, für weitere Informationen, kontaktieren Sie einen Admin.");
                     return View();
                 }
+                user.ZuletztOnline = DateTime.Now;
                 return RedirectToAction("Index", "Home");
             }
-
+           
             ModelState.AddModelError(string.Empty, "Incorrect login or passwort");
             return View();
         }
