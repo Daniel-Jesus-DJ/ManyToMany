@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using ManyToMany.Core.Data;
 using ManyToMany.Core.Models; // Проверь namespace!
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ManyToMany.Controllers
 {
@@ -8,11 +9,14 @@ namespace ManyToMany.Controllers
     {
         private readonly UserManager<Person> _userManager;
         private readonly SignInManager<Person> _signInManager;
+        private readonly ApplicationDBContext _context;
 
-        public AccountController(UserManager<Person> userManager, SignInManager<Person> signInManager)
+
+        public AccountController(UserManager<Person> userManager, SignInManager<Person> signInManager, ApplicationDBContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _context = context;
         }
 
         // --- РЕГИСТРАЦИЯ ---
@@ -81,6 +85,7 @@ namespace ManyToMany.Controllers
                     return View();
                 }
                 user.ZuletztOnline = DateTime.Now;
+                await _context.SaveChangesAsync();
                 return RedirectToAction("Index", "Home");
             }
            
