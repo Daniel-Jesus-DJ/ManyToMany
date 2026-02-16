@@ -34,7 +34,7 @@ namespace ManyToMany.Controllers
                 FirstName = firstName,
                 Alter = alter,
                 Geschlecht = geschlecht,
-                Status = 1
+                Status = 1,
             };
 
             // Identity сама захэширует пароль и сохранит в БД
@@ -78,7 +78,6 @@ namespace ManyToMany.Controllers
                     ModelState.AddModelError(string.Empty, "Dieser Nutzer ist deaktiviert, für weitere Informationen, kontaktieren Sie einen Admin.");
                     return View();
                 }
-
                 return RedirectToAction("Index", "Home");
             }
 

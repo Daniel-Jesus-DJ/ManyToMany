@@ -130,7 +130,7 @@
 										<button class="btn btn-danger btn-sm @(user.Status == 1 ? "disabled" : "")">Deaktivieren</button>
 									</form>
 								</td>
-
+								
 							</tr>
 						}
 						
@@ -208,9 +208,9 @@
 
 	<hr />
 	<h3>Alle Information (Many-to-Many)</h3>
-	<table class="table table-dark">
+	<table class="table table-dark" id="purchaseTable">
 		<thead>
-			<tr><th>User</th><th>Gekauft</th><th>Datum</th></tr>
+			<tr><th>User <input type="text" class="column-filter" placeholder="Filtern..." /></th><th>Gekauft <input type="text" class="column-filter" placeholder="Filtern..." /></th><th>Datum <input type="text" class="column-filter" placeholder="Filtern..." /></th></tr>
 		</thead>
 		<tbody>
 			@foreach (var item in Model.AllPurchases)
@@ -221,9 +221,24 @@
 					<td>@item.PurchaseDate</td>
 				</tr>
 			}
+			
 		</tbody>
 	</table>
 	<style>
-
 	</style>
 </div>
+<script>
+	document.querySelectorAll(".column-filter").forEach((input, columnIndex) => {
+		input.addEventListener("keyup", () => {
+			const filter = input.value.toLowerCase();
+			const rows = document.querySelectorAll("#purchaseTable tbody tr");
+
+			rows.forEach(row => {
+				const cell = row.children[columnIndex];
+				const text = cell.textContent.toLowerCase();
+
+				row.style.display = text.includes(filter) ? "" : "none";
+			});
+		});
+	});
+</script>
