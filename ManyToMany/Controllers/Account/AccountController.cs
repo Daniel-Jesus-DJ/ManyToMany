@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using ManyToMany.Core.Data;
 using ManyToMany.Core.Models; // Проверь namespace!
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ManyToMany.Controllers
 {
@@ -8,11 +9,14 @@ namespace ManyToMany.Controllers
     {
         private readonly UserManager<Person> _userManager;
         private readonly SignInManager<Person> _signInManager;
+        private readonly ApplicationDBContext _context;
 
-        public AccountController(UserManager<Person> userManager, SignInManager<Person> signInManager)
+
+        public AccountController(UserManager<Person> userManager, SignInManager<Person> signInManager, ApplicationDBContext context)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _context = context;
         }
 
         // --- РЕГИСТРАЦИЯ ---
@@ -35,6 +39,8 @@ namespace ManyToMany.Controllers
                 Alter = alter,
                 Geschlecht = geschlecht,
                 Status = 1,
+                ZuletztOnline = DateTime.Now
+
             };
 
             // Identity сама захэширует пароль и сохранит в БД
@@ -78,9 +84,11 @@ namespace ManyToMany.Controllers
                     ModelState.AddModelError(string.Empty, "Dieser Nutzer ist deaktiviert, für weitere Informationen, kontaktieren Sie einen Admin.");
                     return View();
                 }
+                user.ZuletztOnline = DateTime.Now;
+                await _context.SaveChangesAsync();
                 return RedirectToAction("Index", "Home");
             }
-
+           
             ModelState.AddModelError(string.Empty, "Incorrect login or passwort");
             return View();
         }
